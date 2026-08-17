@@ -15,14 +15,14 @@ library(lubridate)
 
 # load data ------------------------------------------------------------------------------
 
-tagging = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/released_fish_tagging_data.csv")
-tagging_data = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/tagging_data.csv")
-release_wq = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/release_water_quality_summary_2.csv")
-fp_all = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/cdec_all_fp_water_quality.csv")
-rectangles_all = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/release_rectangles.csv")
-for_calfishtrack = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/for_calfishtrack.csv")
-tag_life_2026 = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/tag_life_2026.csv")
-release_data = read_csv("C:/Users/Hbell/Projects/gssmb-shiny-app/data/release_data.csv")
+tagging = read_csv("/released_fish_tagging_data.csv")
+tagging_data = read_csv("data/tagging_data.csv")
+release_wq = read_csv("data/release_water_quality_summary_2.csv")
+fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
+rectangles_all = read_csv("data/release_rectangles.csv")
+for_calfishtrack = read_csv("data/for_calfishtrack.csv")
+tag_life_2026 = read_csv("data/tag_life_2026.csv")
+release_data = read_csv("data/release_data.csv")
 
 # begin user interface ------------------------------------------------------------------------------
 
