@@ -15,7 +15,7 @@ library(lubridate)
 
 # load data ------------------------------------------------------------------------------
 
-tagging = read_csv("/released_fish_tagging_data.csv")
+tagging = read_csv("data/released_fish_tagging_data.csv")
 tagging_data = read_csv("data/tagging_data.csv")
 release_wq = read_csv("data/release_water_quality_summary_2.csv")
 fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
