@@ -1086,3 +1086,7 @@ server <- function(input, output, session) {
     content = function(file) write.csv(calfishtrack_report(), file, row.names = FALSE)
   )
 } # end server
+
+# run app-----------------------------------------------------------------------
+
+shinyApp(ui = ui, server = server)
