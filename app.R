@@ -54,6 +54,9 @@ ui <- page_navbar(
                            table.dataTable tbody tr:hover, 
                            table.dataTable tbody tr:hover td 
                            {background-color: #D1EEEE !important;}"))),
+  # change view to 90%
+  tags$head(
+    tags$style(HTML("body {zoom: 90%;}"))),
   
   # home page ------------------------------------------------------------------------------
   
@@ -83,8 +86,6 @@ ui <- page_navbar(
                      br(), br(),
                      div(style = "text-align: center;",
                          tags$img(src = "barrier.jpg")))),
-            
-            
             
   ), # end nav panel - background
   
