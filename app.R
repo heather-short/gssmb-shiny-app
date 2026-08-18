@@ -66,7 +66,7 @@ ui <- page_navbar(
         
               column(5,
                      br(), br(),
-                     h4("The Georgiana Slough Salmonid Migratory Barrier (GSSMB) is a 640-foot-long bio-acoustic fish fence (BAFF) 
+                     h5("The Georgiana Slough Salmonid Migratory Barrier (GSSMB) is a 640-foot-long bio-acoustic fish fence (BAFF) 
                        that uses complementary lights, sounds, and a bubble curtain to deter out-migrating juvenile Chinook salmon 
                        away from the entrance of Georgiana Slough to remain in the mainstem Sacramento River as they make their way 
                        to the ocean. If entrained in Georgiana Slough, fish enter the complex and highly altered central and south Delta, 
@@ -76,16 +76,21 @@ ui <- page_navbar(
                        seasonal routing and survival studies have been implemented to evaluate the efficiency of the Barrier on out-migrating 
                        juvenile Chinook salmon."),
                      br(),   
-                     h4("Navigate through this Shiny App to explore the GSSMB Effectiveness Study data from water years 2024, 2025, and 2026."),
+                     h5("Navigate through this Shiny App to explore the GSSMB Effectiveness Study data from water years 2024, 2025, and 2026."),
                      br(), br(),
                      div(style = "text-align: center;",
-                     tags$img(src = "salmon2.jpg"))),
+                     tags$img(src = "salmon2.jpg")),
+                     br(),
+                     h5("Figure 1: Juvenile Chinook salmon being measured before tagging surgery.", style = "text-align: center;")),
                      
               
               column(7, 
                      br(), br(),
                      div(style = "text-align: center;",
-                         tags$img(src = "barrier.jpg")))),
+                         tags$img(src = "barrier.jpg", height = 800, width = 1000)),
+                     br(),
+                     h5("Figure 2: Aerial view of the Georgiana Slough Salmonid Migratory Barrier looking downstream at the Sacramento River/Georgiana Slough divergence. 
+                        The Sacramento River continues (right) while Georgiana Slough branches off (left).", style = "text-align: center;"))),
             
   ), # end nav panel - background
   
@@ -98,7 +103,7 @@ ui <- page_navbar(
                      # methods and selection box for water year       
                      column(6, 
                             br(),
-                            h4("Methods: \n
+                            h5("Methods: \n
                    To begin each surgical procedure, fish were placed in an anesthesia solution 
                    until they lost equilibrium and were no longer responsive to touch. The fish 
                    was removed from anesthesia and weighed to the nearest 0.1 g and fork length 
@@ -179,7 +184,7 @@ ui <- page_navbar(
                      # anesthetic table and boxplot       
                      column(4, 
                             br(),
-                            h4("Anesthetic", class = "text-center"),
+                            h3("Anesthetic", class = "text-center"),
                             DTOutput("anes_times"),
                             br(),
                             plotOutput("anesthetic_boxplot")),
@@ -187,7 +192,7 @@ ui <- page_navbar(
                      # surgery table and boxplot       
                      column(4, 
                             br(),
-                            h4("Surgery", class = "text-center"),
+                            h3("Surgery", class = "text-center"),
                             DTOutput("surg_times"),
                             br(),
                             plotOutput("surgery_boxplot")),
@@ -195,7 +200,7 @@ ui <- page_navbar(
                      # recovery table and boxplot       
                      column(4, 
                             br(),
-                            h4("Recovery", class = "text-center"),
+                            h3("Recovery", class = "text-center"),
                             DTOutput("rec_times"),
                             br(),
                             plotOutput("recovery_boxplot"))), 
@@ -220,7 +225,7 @@ ui <- page_navbar(
                      # methods and selection box for water year       
                      column(6, 
                             br(),
-                            h4("Methods: Tagged fish were released over a two-week block, to cover a spring-neap tidal cycle, 
+                            h5("Methods: Tagged fish were released over a two-week block, to cover a spring-neap tidal cycle, 
                       and at regular intervals throughout the diel cycle. Small subgroups of ten tagged fish were 
                       released every 3 hours on each study release date, resulting in eight subgroups daily 
                       (midnight, 3 a.m., 6 a.m., 9 a.m., noon, 3 p.m., 6 p.m., and 9 p.m.). 
@@ -279,7 +284,7 @@ nav_panel(title = "Tag Life",
                    # methods and selection box for water year       
                    column(6, 
                           br(),
-                          h4("Methods: Tag life was evaluated to ensure that the transmitters used throughout study met the 
+                          h5("Methods: Tag life was evaluated to ensure that the transmitters used throughout study met the 
                              manufacturer’s stated run time. Tag life tags were activated at the same time as the rest of the 
                              tags for the tagging block. For every week of tagging, eight additional tags were activated and 
                              deployed in a tank with an acoustic receiver. The receiver was downloaded monthly and tags were 
@@ -321,7 +326,7 @@ nav_panel(title = "Download Data",
           
           fluidPage(
             
-            fluidRow(h4("Make Water Year and Tagging Block selections below to generate reports for 
+            fluidRow(h5("Make Water Year and Tagging Block selections below to generate reports for 
                         tagging data, release data, and for the CalFishTrack upload template. 
                         Select Download CSV once you have generated the appropriate report."),
                      br(), br(), 
