@@ -87,7 +87,7 @@ ui <- page_navbar(
               column(7, 
                      br(), br(),
                      div(style = "text-align: center;",
-                         tags$img(src = "barrier.jpg", height = 800, width = 1000)),
+                         tags$img(src = "barrier.jpg", height = 700, width = 1000)),
                      br(),
                      h5("Figure 2: Aerial view of the Georgiana Slough Salmonid Migratory Barrier looking downstream at the Sacramento River/Georgiana Slough divergence. 
                         The Sacramento River continues (right) while Georgiana Slough branches off (left).", style = "text-align: center;"))),
