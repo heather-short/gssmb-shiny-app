@@ -970,8 +970,7 @@ server <- function(input, output, session) {
     
   },res = 96) # end render plot
   
-#### TEST
-# start test------------------------------------------------------------------------------
+# reports
   active_report <- reactiveVal(NULL)
   
   # ---- Reactive data for each report type ----
