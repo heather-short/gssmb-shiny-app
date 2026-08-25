@@ -54,38 +54,43 @@ ui <- page_navbar(
                            table.dataTable tbody tr:hover, 
                            table.dataTable tbody tr:hover td 
                            {background-color: #D1EEEE !important;}"))),
-  # change view to 90%
-  tags$head(
-    tags$style(HTML("body {zoom: 90%;}"))),
+                            
+ # change view to 90%
+ # tags$head(
+ #   tags$style(HTML("body {zoom: 90%;}"))),
   
   # home page ------------------------------------------------------------------------------
   
   nav_panel(title = "Background", 
             
-            fluidRow(
+            fluidRow(h2("Background"),
         
               column(5,
                      br(), br(),
                      h5("The Georgiana Slough Salmonid Migratory Barrier (GSSMB) is a 640-foot-long bio-acoustic fish fence (BAFF) 
-                       that uses complementary lights, sounds, and a bubble curtain to deter out-migrating juvenile Chinook salmon 
-                       away from the entrance of Georgiana Slough to remain in the mainstem Sacramento River as they make their way 
-                       to the ocean. If entrained in Georgiana Slough, fish enter the complex and highly altered central and south Delta, 
-                       increasing travel time and decreasing through-Delta survival following increased contact with sub-optimal habitat, 
-                       predators, and agriculture and water-project pumps. Beginning in 2023, the California Department of Water Resources 
-                       began the annual deployment and operation of the GSSMB from November to May. Additionally, using acoustic telemetry, 
-                       seasonal routing and survival studies have been implemented to evaluate the efficiency of the Barrier on out-migrating 
-                       juvenile Chinook salmon."),
+                        that uses complementary lights, sounds, and a bubble curtain to deter out-migrating juvenile Chinook salmon 
+                        away from the entrance of Georgiana Slough to remain in the mainstem Sacramento River as they make their way 
+                        to the ocean. If entrained in Georgiana Slough, fish enter the complex and highly altered central and south Delta, 
+                        increasing travel time and decreasing through-Delta survival following increased contact with sub-optimal habitat, 
+                        predators, and agriculture and water-project pumps. Beginning in 2023, the California Department of Water Resources 
+                        began the annual deployment and operation of the GSSMB from November to May. Additionally, using acoustic telemetry, 
+                        seasonal routing and survival studies have been implemented to evaluate the efficiency of the Barrier on out-migrating 
+                        juvenile Chinook salmon."),
                      br(),   
                      h5("Navigate through this Shiny App to explore the GSSMB Effectiveness Study data from water years 2024, 2025, and 2026."),
                      br(), br(),
+
+                     # salmon image and caption
                      div(style = "text-align: center;",
-                     tags$img(src = "salmon2.jpg")),
+                         tags$img(src = "salmon2.jpg")),
                      br(),
                      h5("Figure 1: Juvenile Chinook salmon being measured before tagging surgery.", style = "text-align: center;")),
                      
               
               column(7, 
                      br(), br(),
+
+                     # barrier image and caption
                      div(style = "text-align: center;",
                          tags$img(src = "barrier.jpg", height = 700, width = 1000)),
                      br(),
@@ -99,52 +104,54 @@ ui <- page_navbar(
   nav_panel(title = "Tagging", 
             
             fluidRow(h2("Tagging Procedure"),
-                     
-                     # methods and selection box for water year       
+                           
                      column(6, 
                             br(),
                             h5("Methods: \n
-                   To begin each surgical procedure, fish were placed in an anesthesia solution 
-                   until they lost equilibrium and were no longer responsive to touch. The fish 
-                   was removed from anesthesia and weighed to the nearest 0.1 g and fork length 
-                   was measured to the nearest mm. Fish were then placed ventral side up on a foam 
-                   block before an irrigation tube was placed in or near the mouth to allow for 
-                   irrigation of the gills with a lower dose of the anesthetic solution. A small 
-                   incision was made parallel to the mid-ventral line and an ss400 JSATS acoustic
-                   transmitter was inserted into the coelomic cavity before the incision was closed 
-                   with a single uninterrupted 2 x 2 x 2 surgical knot. The duration of each surgery 
-                   was measured from the time the fish was removed from anesthesia to the time it was 
-                   placed in recovery following surgery. Tagging methods were based on Liedke et al. (2012)."),
+                                To begin each surgical procedure, fish were placed in an anesthesia solution 
+                                until they lost equilibrium and were no longer responsive to touch. The fish 
+                                was removed from anesthesia and weighed to the nearest 0.1 g and fork length 
+                                was measured to the nearest mm. Fish were then placed ventral side up on a foam 
+                                block before an irrigation tube was placed in or near the mouth to allow for 
+                                irrigation of the gills with a lower dose of the anesthetic solution. A small 
+                                incision was made parallel to the mid-ventral line and an ss400 JSATS acoustic
+                                transmitter was inserted into the coelomic cavity before the incision was closed 
+                                with a single uninterrupted 2 x 2 x 2 surgical knot. The duration of each surgery 
+                                was measured from the time the fish was removed from anesthesia to the time it was 
+                                placed in recovery following surgery. Tagging methods were based on Liedke et al. (2012)."),
                             br(),
+
+                            # selection box for water year 
                             wellPanel(h4("Select a water year to explore the tagging data."),
                                       selectInput("wy", " ",
                                                   choices = sort(unique(tagging$water_year)),
                                                   selected = max(tagging$water_year)))), 
-                     # tag picture 
+
+                     # tag picture and caption
                      column(6, 
                             br(), br(),
                             div(style = "text-align: center;",
                                 tags$img(src = "tag.jpg")),
                             br(),
                             h5("Figure 1: JSATS ss400 acoustic transmitter", style = "text-align: center;"))),
-            
-            br(), 
+             
             # add a line to separate from next row
+            br(),
             hr(style = "border-top: 2px solid #333; margin: 20px 0;"),
             
             ### morphometrics ------------------------------------------------------------------------------
             
             fluidRow(h2("Morphometrics"),
                      
-                     # weight vs length plot
+                     # weight vs length plot & caption
                      column(11,   
                             br(),
                             plotOutput("plot_wl"), 
                             br(),
                             h5("Figure 2: Fish weight (g) as a function of fork length (mm) 
-                      by month of tagging. Each point represents an individual fish.")),
+                               by month of tagging. Each point represents an individual fish.")),
                      
-                     # legend figure      
+                     # legend image      
                      column(1, 
                             br(), br(),
                             tags$img(src = "legend2.png"), style = "text-align: left;")), # end row
@@ -153,7 +160,7 @@ ui <- page_navbar(
             
             fluidRow(
               
-              # weight table and histogram
+              # weight table and histogram and caption
               column(6, 
                      h3("Weight (g)", class = "text-center"),
                      br(),
@@ -163,7 +170,7 @@ ui <- page_navbar(
                      br(),
                      h5("Figure 3: Distribution of Chinook salmon weight (g) by month of tagging.")), 
               
-              # fork length table and histogram
+              # fork length table and histogram and caption
               column(6, 
                      h3("Fork Length (mm)", class = "text-center"),
                      br(),
@@ -173,8 +180,8 @@ ui <- page_navbar(
                      br(),
                      h5("Figure 4: Distribution of Chinook salmon fork length (mm) by month of tagging."))), 
             
-            br(), 
             # add a line to separate from next row
+            br(), 
             hr(style = "border-top: 2px solid #333; margin: 20px 0;"),
             
             ### surgery times ------------------------------------------------------------------------------
@@ -208,9 +215,9 @@ ui <- page_navbar(
             # row for figure caption
             fluidRow(br(), 
                      h5("Figure 5: Anesthetic, surgery, and recovery times for tagged Late-Fall and Fall Run juvenile Chinook salmon. The centerline of the boxplots 
-                      represents the median, the box represents the interquartile range (IQR), the whiskers extend 1.5 times 
-                      the IQR, and the black points represent values outside 1.5 times the IQR. 
-                      The mean value for each boxplot is represented by a white point."), 
+                        represents the median, the box represents the interquartile range (IQR), the whiskers extend 1.5 times 
+                        the IQR, and the black points represent values outside 1.5 times the IQR. 
+                        The mean value for each boxplot is represented by a white point."), 
                      br(), br())
             
   ), # end nav panel - tagging
@@ -219,31 +226,32 @@ ui <- page_navbar(
   
   nav_panel(title = "Releases", 
             
-            # heading
             fluidRow(h2("Release Procedure"),
-                     
-                     # methods and selection box for water year       
+                         
                      column(6, 
                             br(),
                             h5("Methods: Tagged fish were released over a two-week block, to cover a spring-neap tidal cycle, 
-                      and at regular intervals throughout the diel cycle. Small subgroups of ten tagged fish were 
-                      released every 3 hours on each study release date, resulting in eight subgroups daily 
-                      (midnight, 3 a.m., 6 a.m., 9 a.m., noon, 3 p.m., 6 p.m., and 9 p.m.). 
-                      Releases occurred over a 72-hour period during each week."),
+                                and at regular intervals throughout the diel cycle. Small subgroups of ten tagged fish were 
+                                released every 3 hours on each study release date, resulting in eight subgroups daily 
+                                (midnight, 3 a.m., 6 a.m., 9 a.m., noon, 3 p.m., 6 p.m., and 9 p.m.). 
+                                Releases occurred over a 72-hour period during each week."),
                             br(),
+
+                            # selection box for water year
                             wellPanel(h4("Select a water year to explore the tagging data."),
                                       selectInput("water_year", " ",
                                                   choices  = sort(unique(fp_all$water_year)),
                                                   selected = max(fp_all$water_year)))),
-                     # release picture       
+
+                     # release picture and caption
                      column(6,
                             div(style = "text-align: center;",
                                 tags$img(src = "release2.jpg", height = 500, width = 800)),
                             br(),
                             h5("Figure 1: Fish being released into the Sacramento River.", style = "text-align: center;"))),
             
-            br(), 
             # add a line to separate from next row
+            br(), 
             hr(style = "border-top: 2px solid #333; margin: 20px 0;"),
             
             ### water quality ------------------------------------------------------------------------------
@@ -260,13 +268,15 @@ ui <- page_navbar(
                                                               "Velocity (ft/s)"      = "velocity",
                                                               "Temperature (°C)"     = "temperature",
                                                               "Turbidity (NTU)"      = "turbidity")))),
+
                      # water quality table       
                      column(9,   
                             br(),
                             DTOutput("release_wq_table"))),
             
             br(), 
-            # water quality plot
+
+            # water quality plot and caption
             fluidRow(plotOutput("wq_plot"),
                      h5("Figure 1: CDEC water quality (discharge, velocity, temperature, or turbidity) at Freeport, CA. 
                       Shaded rectangles represent 72-hour release periods for each week of the study. 
@@ -278,10 +288,8 @@ ui <- page_navbar(
 
 nav_panel(title = "Tag Life", 
           
-          # heading
           fluidRow(h2("Tag Life Procedure"),
-                   
-                   # methods and selection box for water year       
+                      
                    column(6, 
                           br(),
                           h5("Methods: Tag life was evaluated to ensure that the transmitters used throughout study met the 
@@ -291,25 +299,29 @@ nav_panel(title = "Tag Life",
                              left in the tank until their battery failed. Using tag detection data, the plot below was created 
                              confirm tag batteries ran to the manufacturer’s expected run time (at least 71 days)."),
                           br(),
+
+                          # selection box for water year
                           wellPanel(h4("Select a water year to explore the tag life data."),
                                     selectInput("water_year", " ",
                                                 choices  = sort(unique(fp_all$water_year)),
                                                 selected = max(fp_all$water_year)))),
-                   # release picture       
+
+                   # tag vial picture and caption   
                    column(6,
                           div(style = "text-align: center;",
                               tags$img(src = "tags.jpg", height = 500, width = 800)),
                           br(),
                           h5("Figure 1: Box of numbered tag vials.", style = "text-align: center;"))),
           
-          br(), 
           # add a line to separate from next row
-          hr(style = "border-top: 2px solid #333; margin: 20px 0;"),
+            br(), 
+            hr(style = "border-top: 2px solid #333; margin: 20px 0;"),
           
           ### tag life plot ------------------------------------------------------------------------------
           
           fluidRow(h2("Tag Life Data"),
                    
+                   # tag life plot or message for no data and figure caption 
                    column(12,   
                           br(),
                           uiOutput("plotOrMessage"),
@@ -330,54 +342,66 @@ nav_panel(title = "Download Data",
                         tagging data, release data, and for the CalFishTrack upload template. 
                         Select Download CSV once you have generated the appropriate report."),
                      br(), br(), 
-          
+              
               column(4,
+
                      wellPanel(h4("Tagging Report"),
+
+                               # selection box for water year and block
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(tagging_data$water_year)),
                                            selected = max(tagging_data$water_year)),
                                selectInput("block", "Tagging Block:",
                                            choices  = sort(unique(tagging_data$block)),
                                            selected = min(tagging_data$block)),
+
+                               # buttons
                                actionButton("tagging_gen_report", "Generate Report", class = "btn-primary"),
                                br(), br(),
                                downloadButton("tag_download", "Download CSV"))),
               
               column(4,
                      wellPanel(h4("Release Report"),
+
+                               # selection box for water year and block
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(release_data$water_year)),
                                            selected = max(release_data$water_year)),
                                selectInput("block", "Release Block:",
                                            choices  = sort(unique(release_data$block)),
                                            selected = min(release_data$block)),
+
+                               # buttons
                                actionButton("release_gen_report", "Generate Report", class = "btn-primary"),
                                br(), br(),
                                downloadButton("rel_download", "Download CSV"))),
               
               column(4,
                      wellPanel(h4("CalFishTrack Report"),
+
+                               # selection box for water year and block
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(for_calfishtrack$water_year)),
                                            selected = max(for_calfishtrack$water_year)),
                                selectInput("block", "Tagging & Release Block:",
                                            choices  = sort(unique(for_calfishtrack$block)),
                                            selected = min(for_calfishtrack$block)),
+
+                               # buttons
                                actionButton("calfishtrack_gen_report", "Generate Report", class = "btn-primary"),
                                br(), br(),
                                downloadButton("calfishtrack_download", "Download CSV")))),
             
             fluidRow(
               
+              # output for generate report
               column(12,
                      h3(textOutput("active_report_title")),
                      DTOutput("report_table")))),
           
 ) # end nav panel - download data
           
-) # end page nav bar - end ui
-
-# end ------------------------------------------------------------------------------
+) # end page nav bar - end ui ------------------------------------------------------------------------------
 
 # server logic ------------------------------------------------------------------------------
 
@@ -387,13 +411,13 @@ server <- function(input, output, session) {
   
   output$plot_wl <- renderPlot({
     
-    # require water year as an input
+    # require water_year as an input
     req(input$wy)
     
     tagging %>% 
-      
-      # filter and mutate data
+      # filter by water year selection
       filter(water_year == input$wy) %>% 
+      # modify data types 
       mutate(water_year = factor(water_year), 
              date = ymd(date),
              run = factor(run),
@@ -427,7 +451,9 @@ server <- function(input, output, session) {
     
     df = tagging %>%
       select(water_year, month, run, weight_gr) %>%
+      # filter by water year selection
       filter(water_year == input$wy) %>%
+      # modify data types
       mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
       group_by(water_year, month, run) %>%
       summarize(n = n(),
@@ -460,19 +486,23 @@ server <- function(input, output, session) {
     req(input$wy)
     
     # get the selected month from the clicked row (NULL if none selected)
-    selected_month <- NULL
-    row <- input$table_weight_rows_selected
+    selected_month <- NULL # default, nothing selected
+    row <- input$table_weight_rows_selected # clicked row on the table
+
+    # if a row is selected
     if (length(row) > 0) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
         mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
         group_by(month) %>%
-        summarize() %>%
+        summarize() %>% # collapse to one row per month
         ungroup()
       
-      # the summary table rows are in month order, so we can pull the month directly
+      # map the clicked row number to the actual month name
+      # if no row is selected, this code is skipped
       selected_month <- as.character(df_lookup$month[row])} # end row selection
     
+    # assigns month colors
     month_colors <- c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
                       "Apr" = "#A2CD5A", "May" = "#FFC125")
     
@@ -483,8 +513,8 @@ server <- function(input, output, session) {
       filter(water_year == input$wy) %>%
       mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May")),
              
-             highlight = if (is.null(selected_month)) "all"
-             else ifelse(month == selected_month, "selected", "other"))
+             highlight = if (is.null(selected_month)) "all" # no selection, everything is tagged as all
+             else ifelse(month == selected_month, "selected", "other")) # selection = selected, everything else = other
     
     if (is.null(selected_month)) {
       # No row selected — normal plot, colored by month
@@ -567,19 +597,23 @@ server <- function(input, output, session) {
     req(input$wy)
     
     # get the selected month from the clicked row (NULL if none selected)
-    selected_month <- NULL
-    row <- input$table_fl_rows_selected
+    selected_month <- NULL # default, nothing selected
+    row <- input$table_fl_rows_selected # clicked row on the table
+
+    # if a row is selected
     if (length(row) > 0) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
         mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
         group_by(month) %>%
-        summarize() %>%
+        summarize() %>% # collapse to one row per month
         ungroup()
       
-      # The summary table rows are in month order, so we can pull the month directly
+      # map the clicked row number to actual month name
+      # if no row is selected, this code is skipped
       selected_month <- as.character(df_lookup$month[row])} # end row selection
     
+    # assigns month colors
     month_colors <- c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
                       "Apr" = "#A2CD5A", "May" = "#FFC125")
     
@@ -590,8 +624,8 @@ server <- function(input, output, session) {
       filter(water_year == input$wy) %>%
       mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May")),
              
-             highlight = if (is.null(selected_month)) "all"
-             else ifelse(month == selected_month, "selected", "other"))
+             highlight = if (is.null(selected_month)) "all" # no selection, everything is tagged as all
+             else ifelse(month == selected_month, "selected", "other")) # selection = selected, everything else = other
     
     if (is.null(selected_month)) {
       # no row selected — normal plot, colored by month
@@ -627,6 +661,7 @@ server <- function(input, output, session) {
               axis.text.y   = element_text(size = 12),
               legend.position = "none",
               title = element_blank())
+      
     } # end else statement
     
   }) # end length histogram
@@ -673,7 +708,6 @@ server <- function(input, output, session) {
   }) # end render data table
   
   # boxplot
-  
   output$anesthetic_boxplot <- renderPlot({req(input$wy)
     
     tagging %>%
@@ -829,12 +863,17 @@ server <- function(input, output, session) {
   # update release_date choices when water_year changes
   observe({
     
+    # require water year as an input
     req(input$water_year)
     
     dates <- release_wq %>%
+      # filter by water year selection
       filter(water_year == input$water_year) %>%
+      # pull all of the release dates as a vector
       pull(release_date) %>%
+      # choose only the unique release dates
       unique() %>%
+      # sort in chronological rder
       sort()
     
     updateSelectInput(session, "release_date",
@@ -842,7 +881,7 @@ server <- function(input, output, session) {
                       selected = dates[1])
   })
   
-  # render the release_date selectInput
+  # create date selection input using "dates"
   output$release_date_ui <- renderUI({
     
     selectInput("release_date", "Release Date:", choices = NULL)
@@ -852,6 +891,7 @@ server <- function(input, output, session) {
   # filtered table data
   filtered_release_wq <- reactive({
     
+    # require both water year and release date as an input
     req(input$water_year, input$release_date)
     
     release_wq %>%
@@ -884,6 +924,7 @@ server <- function(input, output, session) {
   
   # release water quality plot ------------------------------------------------------------------------------
   
+  # create y label lookup vector
   y_labels <- c(discharge   = "Discharge (cfs)",
                 velocity    = "Velocity (ft/s)",
                 temperature = "Temperature (°C)",
@@ -892,8 +933,12 @@ server <- function(input, output, session) {
   fp_sub <- reactive({
     
     fp_all %>%
+
+      # filter by selected water year and value type
       filter(water_year == input$water_year,
              value_type == input$value_type) %>%
+      
+      # modify data type 
       mutate(datetime = ymd_hms(datetime))
     
   })
@@ -901,7 +946,11 @@ server <- function(input, output, session) {
   rectangles_sub <- reactive({
     
     rectangles_all %>%
+      
+      # filter rectangles by water year selection
       filter(water_year == input$water_year) %>%
+      
+      # parse start and end dates
       mutate(start = ymd(start),
              end   = ymd(end))
     
@@ -909,7 +958,7 @@ server <- function(input, output, session) {
   
   output$wq_plot <- renderPlot({
     
-    req(nrow(fp_sub()) > 0)
+    req(nrow(fp_sub()) > 0) # requires there to be data - no plot if no data
     
     p = ggplot(fp_sub(), aes(x = datetime, y = value)) +
       geom_rect(data = rectangles_sub(), inherit.aes = FALSE,
@@ -926,12 +975,15 @@ server <- function(input, output, session) {
       theme(axis.title = element_text(size = 16),
             axis.text  = element_text(size = 12))
     
+    # require release date selection
     req(input$release_date)
     
+    # modify data type 
     target_dt = as.POSIXct(input$release_date)
-    
-    closest_idx <- which.min(abs(difftime(fp_sub()$datetime, target_dt)))
-    point_data  <- fp_sub()[closest_idx, ]
+
+    # find the row in fp_sub() whose datetime is nearest to target_dt (since release_date may not exactly match a logged reading)
+    closest_idx <- which.min(abs(difftime(fp_sub()$datetime, target_dt))) 
+    point_data  <- fp_sub()[closest_idx, ] # pull that single closest row
     
     p + geom_point(data = point_data,
                    aes(x = datetime, y = value),
@@ -946,7 +998,6 @@ server <- function(input, output, session) {
     else {div(style = "color: #888; font-style: italic; font-size: 20px; padding: 20px; text-align: center;", 
               "Sorry, no data for this year.")}
   })
-  
   
   # line plot
   output$tag_life_plot <- renderPlot({req(input$water_year)
@@ -968,7 +1019,7 @@ server <- function(input, output, session) {
             axis.title.y  = element_text(size = 16),
             axis.text.y   = element_text(size = 12))
     
-  },res = 96) # end render plot
+  }, res = 96) # end render plot
   
 # reports
   active_report <- reactiveVal(NULL)
@@ -976,6 +1027,7 @@ server <- function(input, output, session) {
   # ---- Reactive data for each report type ----
   tagging_report <- reactive({
     
+    # require water year and block selection
     req(input$water_year, input$block)
     
     tagging_data %>% 
@@ -995,6 +1047,7 @@ server <- function(input, output, session) {
   
   release_report <- reactive({
     
+    # require water year and block selection
     req(input$water_year, input$block)
     
     release_data %>%
@@ -1011,6 +1064,7 @@ server <- function(input, output, session) {
   
   calfishtrack_report <- reactive({
     
+    # require tagging year and block selection
     req(input$water_year, input$block)
     
     for_calfishtrack %>% 
