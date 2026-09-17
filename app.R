@@ -21,7 +21,7 @@ release_wq = read_csv("data/release_water_quality_summary_2.csv")
 fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
 rectangles_all = read_csv("data/release_rectangles.csv")
 for_calfishtrack = read_csv("data/for_calfishtrack.csv")
-tag_life_2026 = read_csv("data/tag_life_2026.csv")
+tag_life_2026 = readRDS("data/tag_life_survival_2026.rds")
 release_data = read_csv("data/release_data.csv")
 
 # begin user interface ------------------------------------------------------------------------------
