@@ -348,7 +348,7 @@ nav_panel(title = "Download Data",
 
                      wellPanel(h4("Tagging Report"),
 
-                               # selection box for water year and block
+                               # selection box for water year
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(tagging_data$water_year)),
                                            selected = max(tagging_data$water_year)),
@@ -361,7 +361,7 @@ nav_panel(title = "Download Data",
               column(4,
                      wellPanel(h4("Release Report"),
 
-                               # selection box for water year and block
+                               # selection box for water year
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(release_data$water_year)),
                                            selected = max(release_data$water_year)),
@@ -1023,11 +1023,10 @@ server <- function(input, output, session) {
   tagging_report <- reactive({
     
     # require water year and block selection
-    req(input$water_year, input$block)
+    req(input$water_year)
     
     tagging_data %>% 
-      filter(water_year == input$water_year,
-             block == input$block) %>% 
+      filter(water_year == input$water_year) %>% 
       
       mutate(anesthetic_time_mmss = as.character(anesthetic_time_mmss),
              surgery_time_mmss = as.character(surgery_time_mmss),
@@ -1043,11 +1042,10 @@ server <- function(input, output, session) {
   release_report <- reactive({
     
     # require water year and block selection
-    req(input$water_year, input$block)
+    req(input$water_year)
     
     release_data %>%
-      filter(water_year == input$water_year,
-             block == input$block) %>% 
+      filter(water_year == input$water_year) %>% 
       
       mutate(release_datetime = parse_date_time(release_datetime, 
                                                 orders = c("ymd HMS", "ymd HM", "ymd")),
