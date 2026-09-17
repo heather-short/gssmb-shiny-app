@@ -108,7 +108,7 @@ ui <- page_navbar(
                      column(6, 
                             br(),
                             h5("Methods: \n
-                                To begin each surgical procedure, fish were placed in an anesthesia solution 
+                                To begin each surgical procedure, juvenile Chinook salmon were placed in an anesthesia solution 
                                 until they lost equilibrium and were no longer responsive to touch. The fish 
                                 was removed from anesthesia and weighed to the nearest 0.1 g and fork length 
                                 was measured to the nearest mm. Fish were then placed ventral side up on a foam 
@@ -230,15 +230,16 @@ ui <- page_navbar(
                          
                      column(6, 
                             br(),
-                            h5("Methods: Tagged fish were released over a two-week block, to cover a spring-neap tidal cycle, 
-                                and at regular intervals throughout the diel cycle. Small subgroups of ten tagged fish were 
-                                released every 3 hours on each study release date, resulting in eight subgroups daily 
+                            h5("Methods: Tagged juvenile Chinook salmon were released over a two-week block, to cover a spring-neap tidal cycle, 
+                                and at regular intervals throughout the diel cycle. Small sub-groups of ten tagged fish were 
+                                released in the main channel of the Sacramento River near the Sacramento Marina (38.560, -121.517) 
+                                every 3 hours on each study release date, resulting in eight subgroups daily 
                                 (midnight, 3 a.m., 6 a.m., 9 a.m., noon, 3 p.m., 6 p.m., and 9 p.m.). 
                                 Releases occurred over a 72-hour period during each week."),
                             br(),
 
                             # selection box for water year
-                            wellPanel(h4("Select a water year to explore the tagging data."),
+                            wellPanel(h4("Select a water year to explore the release data."),
                                       selectInput("water_year", " ",
                                                   choices  = sort(unique(fp_all$water_year)),
                                                   selected = max(fp_all$water_year)))),
@@ -351,9 +352,6 @@ nav_panel(title = "Download Data",
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(tagging_data$water_year)),
                                            selected = max(tagging_data$water_year)),
-                               selectInput("block", "Tagging Block:",
-                                           choices  = sort(unique(tagging_data$block)),
-                                           selected = min(tagging_data$block)),
 
                                # buttons
                                actionButton("tagging_gen_report", "Generate Report", class = "btn-primary"),
@@ -367,9 +365,6 @@ nav_panel(title = "Download Data",
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(release_data$water_year)),
                                            selected = max(release_data$water_year)),
-                               selectInput("block", "Release Block:",
-                                           choices  = sort(unique(release_data$block)),
-                                           selected = min(release_data$block)),
 
                                # buttons
                                actionButton("release_gen_report", "Generate Report", class = "btn-primary"),
