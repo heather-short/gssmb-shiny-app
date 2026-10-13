@@ -9,13 +9,12 @@ library(bslib)
 library(DT)  
 library(tidyverse)
 library(shinythemes)
-library(ggplot2)
 library(thematic)
-library(lubridate)
+library(paletteer)
 
 # load data ------------------------------------------------------------------------------
 
-tagging = read_csv("data/released_fish_tagging_data.csv")
+tagging = readRDS("data/historical_released_fish_tagging_data.rds")
 tagging_data = read_csv("data/tagging_data.csv")
 release_wq = read_csv("data/release_water_quality_summary_2.csv")
 fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
@@ -23,6 +22,8 @@ rectangles_all = read_csv("data/release_rectangles.csv")
 for_calfishtrack = read_csv("data/for_calfishtrack.csv")
 tag_life_2026 = readRDS("data/tag_life_survival_2026.rds")
 release_data = read_csv("data/release_data.csv")
+
+
 
 # begin user interface ------------------------------------------------------------------------------
 
@@ -125,7 +126,7 @@ ui <- page_navbar(
                             wellPanel(h4("Select a water year to explore the tagging data."),
                                       selectInput("wy", " ",
                                                   choices = sort(unique(tagging$water_year)),
-                                                  selected = max(tagging$water_year)))), 
+                                                  selected = "2026"))), 
 
                      # tag picture and caption
                      column(6, 
@@ -144,17 +145,17 @@ ui <- page_navbar(
             fluidRow(h2("Morphometrics"),
                      
                      # weight vs length plot & caption
-                     column(11,   
+                     column(12,   
                             br(),
                             plotOutput("plot_wl"), 
                             br(),
                             h5("Figure 2: Fish weight (g) as a function of fork length (mm) 
-                               by month of tagging. Each point represents an individual fish.")),
+                               by tagging block. Each point represents an individual fish."))),
                      
                      # legend image      
-                     column(1, 
-                            br(), br(),
-                            tags$img(src = "legend2.png"), style = "text-align: left;")), # end row
+                     #column(1, 
+                           # br(), br(),
+                          #  tags$img(src = "legend2.png"), style = "text-align: left;")), # end row
             
             br(), 
             
@@ -168,7 +169,7 @@ ui <- page_navbar(
                      br(),
                      plotOutput("hist_weight"), 
                      br(),
-                     h5("Figure 3: Distribution of Chinook salmon weight (g) by month of tagging.")), 
+                     h5("Figure 3: Distribution of Chinook salmon weight (g) by tagging block.")), 
               
               # fork length table and histogram and caption
               column(6, 
@@ -178,7 +179,7 @@ ui <- page_navbar(
                      br(),
                      plotOutput("hist_fl"),
                      br(),
-                     h5("Figure 4: Distribution of Chinook salmon fork length (mm) by month of tagging."))), 
+                     h5("Figure 4: Distribution of Chinook salmon fork length (mm) by tagging block."))), 
             
             # add a line to separate from next row
             br(), 
@@ -412,18 +413,12 @@ server <- function(input, output, session) {
     tagging %>% 
       # filter by water year selection
       filter(water_year == input$wy) %>% 
-      # modify data types 
-      mutate(water_year = factor(water_year), 
-             date = ymd(date),
-             run = factor(run),
-             month = factor(month, levels = c("Dec", "Jan", "Feb", "Mar", "Apr", "May"))) %>%
       
       # plot
-      ggplot(aes(x = weight_gr, y = fork_length_mm, color = month)) + 
-      facet_grid(~month) + 
+      ggplot(aes(x = weight_gr, y = fork_length_mm, color = block)) + 
+      facet_grid(~block) + 
       geom_jitter() + 
-      scale_color_manual(values = c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
-                                    "Apr" = "#A2CD5A", "May" = "#FFC125")) + 
+      scale_color_paletteer_d("MoMAColors::Ernst") +
       labs(x = "Weight (g)",
            y = "Fork Length (mm)") +
       theme(axis.title.x = element_text(size = 16),
@@ -445,12 +440,13 @@ server <- function(input, output, session) {
     req(input$wy)
     
     df = tagging %>%
-      select(water_year, month, run, weight_gr) %>%
+      select(water_year, block, run, weight_gr) %>%
       # filter by water year selection
       filter(water_year == input$wy) %>%
       # modify data types
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-      group_by(water_year, month, run) %>%
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+      group_by(water_year, block, run) %>%
       summarize(n = n(),
                 Minimum = round(min(weight_gr, na.rm = TRUE), 2),
                 Maximum = round(max(weight_gr, na.rm = TRUE), 2),
@@ -458,7 +454,7 @@ server <- function(input, output, session) {
                 SD = round(sd(weight_gr, na.rm = TRUE), 2)) %>%
       ungroup() %>%
       rename("Water Year" = water_year,
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run)
     
     # creates data table with selectable row
@@ -480,42 +476,40 @@ server <- function(input, output, session) {
     # require water_year as an input
     req(input$wy)
     
-    # get the selected month from the clicked row (NULL if none selected)
-    selected_month <- NULL # default, nothing selected
+    # get the selected block from the clicked row (NULL if none selected)
+    selected_block <- NULL # default, nothing selected
     row <- input$table_weight_rows_selected # clicked row on the table
 
     # if a row is selected
     if (length(row) > 0) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
-        mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-        group_by(month) %>%
-        summarize() %>% # collapse to one row per month
+        mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+        group_by(block) %>%
+        summarize() %>% # collapse to one row per block
         ungroup()
       
-      # map the clicked row number to the actual month name
+      # map the clicked row number to the actual block name
       # if no row is selected, this code is skipped
-      selected_month <- as.character(df_lookup$month[row])} # end row selection
-    
-    # assigns month colors
-    month_colors <- c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
-                      "Apr" = "#A2CD5A", "May" = "#FFC125")
+      selected_block <- as.character(df_lookup$block[row])} # end row selection
     
     # make the histogram  
     plot_data <- tagging %>%
       
       # require water_year as an input
       filter(water_year == input$wy) %>%
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May")),
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B")),
              
-             highlight = if (is.null(selected_month)) "all" # no selection, everything is tagged as all
-             else ifelse(month == selected_month, "selected", "other")) # selection = selected, everything else = other
+             highlight = if (is.null(selected_block)) "all" # no selection, everything is tagged as all
+             else ifelse(block == selected_block, "selected", "other")) # selection = selected, everything else = other
     
-    if (is.null(selected_month)) {
-      # No row selected — normal plot, colored by month
-      ggplot(plot_data, aes(x = weight_gr, fill = month)) +
+    if (is.null(selected_block)) {
+      # No row selected — normal plot, colored by block
+      ggplot(plot_data, aes(x = weight_gr, fill = block)) +
         geom_histogram(alpha = 0.7, position = "identity") +
-        scale_fill_manual(values = month_colors) +
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
         labs(x = "Weight (g)", 
              y = "Count") +
         theme(axis.title.x = element_text(size = 16),
@@ -531,11 +525,11 @@ server <- function(input, output, session) {
     else {
       # row selected — highlight chosen month, grey out others
       ggplot(plot_data, aes(x = weight_gr,
-                            fill = month,
+                            fill = block,
                             alpha = highlight)) +
         geom_histogram(position = "identity") +
-        scale_fill_manual(values = month_colors) +
-        scale_alpha_manual(values = c(selected = 0.85, other = 0.15),
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
+        scale_alpha_manual(values = c(selected = 0.90, other = 0.10),
                            guide = "none") +
         labs(x = "Weight (g)", 
              y = "Count") +
@@ -558,10 +552,11 @@ server <- function(input, output, session) {
     req(input$wy)
     
     df = tagging %>%
-      select(water_year, month, run, fork_length_mm) %>%
+      select(water_year, block, run, fork_length_mm) %>%
       filter(water_year == input$wy) %>%
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-      group_by(water_year, month, run) %>%
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+      group_by(water_year, block, run) %>%
       summarize("n" = n(), 
                 "Minimum" = round(min(fork_length_mm, na.rm = T), 2),
                 "Maximum" = round(max(fork_length_mm, na.rm = T), 2),
@@ -569,7 +564,7 @@ server <- function(input, output, session) {
                 "SD" = round(sd(fork_length_mm, na.rm = T), 2)) %>%
       ungroup() %>%
       rename("Water Year" = water_year,
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run)
     
     # creates data table with selectable row
@@ -591,42 +586,40 @@ server <- function(input, output, session) {
     # require water_year as an input
     req(input$wy)
     
-    # get the selected month from the clicked row (NULL if none selected)
-    selected_month <- NULL # default, nothing selected
+    # get the selected block from the clicked row (NULL if none selected)
+    selected_block <- NULL # default, nothing selected
     row <- input$table_fl_rows_selected # clicked row on the table
 
     # if a row is selected
     if (length(row) > 0) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
-        mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-        group_by(month) %>%
-        summarize() %>% # collapse to one row per month
+        mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+        group_by(block) %>%
+        summarize() %>% # collapse to one row per block
         ungroup()
       
-      # map the clicked row number to actual month name
+      # map the clicked row number to actual block name
       # if no row is selected, this code is skipped
-      selected_month <- as.character(df_lookup$month[row])} # end row selection
-    
-    # assigns month colors
-    month_colors <- c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
-                      "Apr" = "#A2CD5A", "May" = "#FFC125")
+      selected_block <- as.character(df_lookup$block[row])} # end row selection
     
     # make the histogram  
     df = tagging %>%
       
       # require water_year as an input
       filter(water_year == input$wy) %>%
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May")),
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B")),
              
-             highlight = if (is.null(selected_month)) "all" # no selection, everything is tagged as all
-             else ifelse(month == selected_month, "selected", "other")) # selection = selected, everything else = other
+             highlight = if (is.null(selected_block)) "all" # no selection, everything is tagged as all
+             else ifelse(block == selected_block, "selected", "other")) # selection = selected, everything else = other
     
-    if (is.null(selected_month)) {
-      # no row selected — normal plot, colored by month
-      ggplot(df, aes(x = fork_length_mm, fill = month)) +
+    if (is.null(selected_block)) {
+      # no row selected — normal plot, colored by block
+      ggplot(df, aes(x = fork_length_mm, fill = block)) +
         geom_histogram(alpha = 0.7, position = "identity") +
-        scale_fill_manual(values = month_colors) +
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
         scale_y_continuous(position = "right") +
         labs(x = "Fork Length (mm)", 
              y = "Count") +
@@ -639,14 +632,14 @@ server <- function(input, output, session) {
         )} # end if statement
     
     else {
-      # row selected — highlight chosen month, grey out others
+      # row selected — highlight chosen block, grey out others
       ggplot(df, aes(x = fork_length_mm,
-                            fill = month,
+                            fill = block,
                             alpha = highlight)) +
         geom_histogram(position = "identity") +
-        scale_fill_manual(values = month_colors) +
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
         scale_y_continuous(position = "right") +
-        scale_alpha_manual(values = c(selected = 0.85, other = 0.15),
+        scale_alpha_manual(values = c(selected = 0.90, other = 0.10),
                            guide = "none") +
         labs(x = "Fork Length (mm)", 
              y = "Count") +
@@ -671,8 +664,9 @@ server <- function(input, output, session) {
     
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>% 
-      group_by(water_year, month, run) %>% 
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>% 
+      group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_anes = round(min(anesthetic_time_sec, na.rm = TRUE)),
                 max_anes = round(max(anesthetic_time_sec, na.rm = TRUE)),
@@ -684,7 +678,7 @@ server <- function(input, output, session) {
              sd_anes = sprintf("%02d:%02d", sd_anes %/% 60, sd_anes %% 60)) %>% 
       ungroup() %>% 
       rename("Water Year" = water_year, 
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run, 
              "Min" = min_anes, 
              "Max" = max_anes, 
@@ -716,7 +710,7 @@ server <- function(input, output, session) {
                          labels = function(x) sprintf("%02d:%02d", x %/% 60, round(x %% 60))) +
       scale_x_discrete(labels = c("late-fall" = "Late Fall", "fall" = "Fall"), limits = c("late-fall", "fall")) +
       stat_summary(fun = mean, geom = "point", shape = 16, size = 3, color = "white") +
-      scale_fill_manual(values = c("late-fall" = "#53868B", "fall" = "#6E8B3D"))+
+      scale_fill_manual(values = c("late-fall" = "#8CBF9AFF", "fall" = "#315B88FF"))+
       theme(axis.title.x = element_text(size = 18),
             axis.text.x = element_text(size = 16),
             axis.title.y = element_text(size = 18),
@@ -735,8 +729,9 @@ server <- function(input, output, session) {
     
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>% 
-      group_by(water_year, month, run) %>% 
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>% 
+      group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_surg = round(min(surgery_time_sec, na.rm = TRUE)),
                 max_surg = round(max(surgery_time_sec, na.rm = TRUE)),
@@ -748,7 +743,7 @@ server <- function(input, output, session) {
              sd_surg = sprintf("%02d:%02d", sd_surg %/% 60, sd_surg %% 60)) %>% 
       ungroup() %>% 
       rename("Water Year" = water_year, 
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run, 
              "Min" = min_surg, 
              "Max" = max_surg, 
@@ -780,7 +775,7 @@ server <- function(input, output, session) {
                          labels = function(x) sprintf("%02d:%02d", x %/% 60, round(x %% 60))) +
       scale_x_discrete(labels = c("late-fall" = "Late Fall", "fall" = "Fall"), limits = c("late-fall", "fall")) +
       stat_summary(fun = mean, geom = "point", shape = 16, size = 3, color = "white") +
-      scale_fill_manual(values = c("late-fall" = "#53868B", "fall" = "#6E8B3D"))+
+      scale_fill_manual(values = c("late-fall" = "#8CBF9AFF", "fall" = "#315B88FF"))+
       theme(axis.title.x = element_text(size = 18),
             axis.text.x = element_text(size = 16),
             axis.title.y = element_text(size = 18),
@@ -799,8 +794,9 @@ server <- function(input, output, session) {
     
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>% 
-      group_by(water_year, month, run) %>% 
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>% 
+      group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_rec = round(min(recovery_time_sec, na.rm = TRUE)),
                 max_rec = round(max(recovery_time_sec, na.rm = TRUE)),
@@ -812,7 +808,7 @@ server <- function(input, output, session) {
              sd_rec = sprintf("%02d:%02d", sd_rec %/% 60, sd_rec %% 60)) %>% 
       ungroup() %>% 
       rename("Water Year" = water_year, 
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run, 
              "Min" = min_rec, 
              "Max" = max_rec, 
@@ -844,7 +840,7 @@ server <- function(input, output, session) {
                          labels = function(x) sprintf("%02d:%02d", x %/% 60, round(x %% 60))) +
       scale_x_discrete(labels = c("late-fall" = "Late Fall", "fall" = "Fall"), limits = c("late-fall", "fall")) +
       stat_summary(fun = mean, geom = "point", shape = 16, size = 3, color = "white") +
-      scale_fill_manual(values = c("late-fall" = "#53868B", "fall" = "#6E8B3D"))+
+      scale_fill_manual(values = c("late-fall" = "#8CBF9AFF", "fall" = "#315B88FF"))+
       theme(axis.title.x = element_text(size = 18),
             axis.text.x = element_text(size = 16),
             axis.title.y = element_text(size = 18),
