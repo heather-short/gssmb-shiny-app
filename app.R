@@ -16,12 +16,15 @@ library(paletteer)
 
 tagging = readRDS("data/historical_released_fish_tagging_data.rds")
 tagging_data = read_csv("data/tagging_data.csv")
-release_wq = read_csv("data/release_water_quality_summary_2.csv")
+#release_wq = read_csv("data/release_water_quality_summary_2.csv")
+release_wq = readRDS("data/historical_release_water_quality_summary.rds")
 fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
 rectangles_all = read_csv("data/release_rectangles.csv")
 for_calfishtrack = read_csv("data/for_calfishtrack.csv")
 tag_life_2026 = readRDS("data/tag_life_survival_2026.rds")
 release_data = read_csv("data/release_data.csv")
+water_quality = readRDS("data/historical_water_quality.rds")
+release_dates = readRDS("data/release_date_rectangles.rds")
 
 
 
@@ -119,7 +122,7 @@ ui <- page_navbar(
                                 transmitter was inserted into the coelomic cavity before the incision was closed 
                                 with a single uninterrupted 2 x 2 x 2 surgical knot. The duration of each surgery 
                                 was measured from the time the fish was removed from anesthesia to the time it was 
-                                placed in recovery following surgery. Tagging methods were based on Liedke et al. (2012)."),
+                                placed in recovery following surgery. Tagging methods were based on Liedtke et al. (2012)."),
                             br(),
 
                             # selection box for water year 
@@ -240,10 +243,11 @@ ui <- page_navbar(
                             br(),
 
                             # selection box for water year
-                            wellPanel(h4("Select a water year to explore the release data."),
-                                      selectInput("water_year", " ",
+                            wellPanel(h4("Select a water year and release block to explore the release data."),
+                                      selectInput("water_year", "Water Year:",
                                                   choices  = sort(unique(fp_all$water_year)),
-                                                  selected = max(fp_all$water_year)))),
+                                                  selected = max(fp_all$water_year)),
+                                      selectInput("block_id", "Release Block:", choices = NULL))),
 
                      # release picture and caption
                      column(6,
@@ -260,31 +264,23 @@ ui <- page_navbar(
             
             fluidRow(h2("Water Quality during Fish Releases"),
                      
-                     # selection box for release date and water quality metric       
-                     column(3, 
-                            br(), br(),
-                            wellPanel(h4("Make selections to explore the release & water quality data."),
-                                      selectInput("release_date", "Release Date:", choices = NULL),
-                                      selectInput("value_type", "Water Qualtiy Metric:",
-                                                  choices = c("Discharge (cfs)"      = "discharge",
-                                                              "Velocity (ft/s)"      = "velocity",
-                                                              "Temperature (°C)"     = "temperature",
-                                                              "Turbidity (NTU)"      = "turbidity")))),
-
                      # water quality table       
-                     column(9,   
+                     column(6,   
                             br(),
-                            DTOutput("release_wq_table"))),
-            
-            br(), 
+                            DTOutput("release_wq_table")),
+                
+                     # water quality table       
+                     column(6,   
+                            br(),
+                            plotOutput("water_quality_plot"))),
 
-            # water quality plot and caption
-            fluidRow(plotOutput("wq_plot"),
-                     h5("Figure 1: CDEC water quality (discharge, velocity, temperature, or turbidity) at Freeport, CA. 
-                      Shaded rectangles represent 72-hour release periods for each week of the study. 
-                       The yellow point represents the selected release date.")),
-  
-), # end nav panel - releases
+            # row for figure caption
+            fluidRow(br(), 
+                     h5("Figure 2: Water quality at Freeport, CA. Shaded rectangles represent 72-hour release periods for each block 
+                     of the study. Data source: CDEC and USGS."), 
+                     br(), br())
+            
+  ), # end nav panel - releases
 
 # tag life page ------------------------------------------------------------------------------
 
@@ -459,15 +455,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-    
-  }) # end render data table
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # weight histogram ------------------------------------------------------------------------------
   
@@ -569,15 +566,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-    
-  }) # end render data table 
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table 
   
   # fork length histogram ------------------------------------------------------------------------------
   
@@ -687,14 +685,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-  }) # end render data table
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # boxplot
   output$anesthetic_boxplot <- renderPlot({req(input$wy)
@@ -752,14 +752,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-  }) # end render data table
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # boxplot
   output$surgery_boxplot <- renderPlot({req(input$wy)
@@ -817,14 +819,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-  }) # end render data table 
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table 
   
   # boxplot
   output$recovery_boxplot <- renderPlot({req(input$wy)
@@ -851,69 +855,118 @@ server <- function(input, output, session) {
   
   # release water quality data table ------------------------------------------------------------------------------
   
-  # update release_date choices when water_year changes
+  # update block_id choices when water_year changes
   observe({
     
     # require water year as an input
     req(input$water_year)
     
-    dates <- release_wq %>%
+    blocks <- release_wq %>%
       # filter by water year selection
       filter(water_year == input$water_year) %>%
-      # pull all of the release dates as a vector
-      pull(release_date) %>%
-      # choose only the unique release dates
+      # pull all of the blocks as a vector
+      pull(block) %>%
+      # choose only the unique blocks
       unique() %>%
-      # sort in chronological rder
+      # sort in chronological order
       sort()
     
-    updateSelectInput(session, "release_date",
-                      choices  = dates,
-                      selected = dates[1])
-  })
-  
-  # create date selection input using "dates"
-  output$release_date_ui <- renderUI({
-    
-    selectInput("release_date", "Release Date:", choices = NULL)
-    
+    updateSelectInput(session, "block_id",
+                      choices  = blocks,
+                      selected = blocks[1])
   })
   
   # filtered table data
   filtered_release_wq <- reactive({
     
     # require both water year and release date as an input
-    req(input$water_year, input$release_date)
+    req(input$water_year, input$block_id)
     
     release_wq %>%
       filter(water_year == input$water_year,
-             release_date == input$release_date) %>%
-      mutate(rel_id = factor(rel_id, levels = c("RT-1", "RT-2", "RT-3", "RT-4", "RT-5", "RT-6", 
-                                                "RT-7", "RT-8", "RT-9", "RT-10", "RT-11", "RT-12",
-                                                "RT-13", "RT-14", "RT-15", "RT-16", "RT-17", "RT-18", 
-                                                "RT-19", "RT-20", "RT-21", "RT-22", "RT-23", "RT-24", "point_rel"))) %>% 
+             block == input$block_id) %>%
+      ungroup() %>% 
+      mutate(rel_id = factor(rel_id, levels = c(paste0("RT-", 1:24), "point_rel"))) %>% 
       arrange(rel_id) %>%
-      select(rel_id, release_time, lunar_phase, fish_released, temperature, turbidity, discharge, velocity) %>% 
+      select(rel_id, release_date, release_time, lunar_phase, fish_released, Temperature, Turbidity, Discharge) %>% 
       rename("Release ID"       = rel_id,
+             "Date of Release" = release_date,
              "Time of Release" = release_time, 
              "Lunar Phase" = lunar_phase,
              "Fish Released" = fish_released,
-             "Temperature (°C)" = temperature,
-             "Turbidity (FNU)"  = turbidity,
-             "Discharge (cfs)"  = discharge,
-             "Velocity (ft/s)"  = velocity)
+             "Temperature (°C)" = Temperature,
+             "Turbidity (FNU)"  = Turbidity,
+             "Discharge (cfs)"  = Discharge)
   })
   
   # Render DT
   output$release_wq_table <- renderDT({
     datatable(filtered_release_wq(),
-              rownames  = FALSE,
-              options = list(dom = "t",
-                             server = FALSE))
-    
-  }) # end render data table
+              rownames = FALSE,
+              options  = list(
+                dom = "t",
+                paging     = FALSE,  
+                columnDefs = list(
+                  list(className = "dt-center", targets = "_all")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # release water quality plot ------------------------------------------------------------------------------
+  
+  freeport = reactive({
+
+    water_quality %>% 
+    filter(water_year == input$water_year) %>% 
+    filter(location == "Sacramento River at Freeport")})
+  
+    facet_titles = c("Temperature"       = "Temperature (°C)",
+                     "Turbidity"         = "Turbidity (FNU)",
+                     "Discharge"         = "Discharge (cfs)",
+                     "Discharge, tidally filtered" = "Tidally Filtered Discharge (cfs)")
+  
+    facet_colors = c("Temperature"       = "#5FA2A4FF",
+                     "Turbidity"         = "#8CBF9AFF",
+                     "Discharge"         = "#191F40FF",
+                     "Discharge, tidally filtered" = "#315B88FF")
+    
+    release_date_rects = reactive({
+      
+      release_dates %>%
+        # filter rectangles by water year selection
+        filter(water_year == input$water_year) %>%
+        # parse start and end dates
+        mutate(start = ymd_hm(paste(start, "21:00"), tz = "America/Los_Angeles"),
+               end   = start + hours(69))
+      
+    })
+      
+  
+  output$water_quality_plot <- renderPlot({
+    
+    ggplot(freeport(), aes(x = datetime, y = value, color = value_type)) + 
+      geom_line(linewidth = 1.2) + 
+      facet_wrap(vars(value_type), ncol = 1, scales = "free_y",
+                 labeller = as_labeller(facet_titles)) +
+      geom_rect(data = release_date_rects(), inherit.aes = FALSE,
+                aes(xmin = as.POSIXct(start),
+                    xmax = as.POSIXct(end),
+                    ymin = -Inf, ymax = Inf),
+                fill = "darkgray", alpha = 0.40) +
+      scale_color_manual(values = facet_colors) +
+      scale_x_datetime(name = "Month",
+                       date_breaks = "1 month",
+                       date_labels = "%b") +
+      theme(axis.title.x = element_text(size = 18),
+            axis.text.x = element_text(size = 16),
+            axis.title.y = element_text(size = 18),
+            axis.text.y = element_text(size = 16),
+            strip.text = element_text(size = 16, hjust = 0, face = "bold"),
+            legend.position = "none",
+            panel.spacing = unit(1, "lines"))
+    
+  }, height = 1000)
+  
   
   # create y label lookup vector
   y_labels <- c(discharge   = "Discharge (cfs)",
