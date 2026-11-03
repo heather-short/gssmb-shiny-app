@@ -937,22 +937,29 @@ server <- function(input, output, session) {
         filter(water_year == input$water_year) %>%
         # parse start and end dates
         mutate(start = ymd_hm(paste(start, "21:00"), tz = "America/Los_Angeles"),
-               end   = start + hours(69))
+               end   = start + hours(69),
+               # flag the rectangle that matches the selected block
+               selected = block %in% input$block_id)
       
     })
       
   
   output$water_quality_plot <- renderPlot({
+
+     rects <- release_date_rects()
     
     ggplot(freeport(), aes(x = datetime, y = value, color = value_type)) + 
-      geom_line(linewidth = 1.2) + 
       facet_wrap(vars(value_type), ncol = 1, scales = "free_y",
                  labeller = as_labeller(facet_titles)) +
-      geom_rect(data = release_date_rects(), inherit.aes = FALSE,
-                aes(xmin = as.POSIXct(start),
-                    xmax = as.POSIXct(end),
-                    ymin = -Inf, ymax = Inf),
-                fill = "darkgray", alpha = 0.40) +
+      geom_rect(data = filter(rects, !selected), inherit.aes = FALSE,
+              aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+              fill = "darkgray", alpha = 0.30) +
+      # selected rectangle (highlighted)
+      geom_rect(data = filter(rects, selected), inherit.aes = FALSE,
+                aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+                fill = "#dde83dff", alpha = 0.55,
+                color = "#8f962bff", linewidth = 0.8) +
+       geom_line(linewidth = 1.2) + 
       scale_color_manual(values = facet_colors) +
       scale_x_datetime(name = "Month",
                        date_breaks = "1 month",
