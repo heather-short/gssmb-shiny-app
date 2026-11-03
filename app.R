@@ -17,14 +17,16 @@ library(paletteer)
 tagging = readRDS("data/historical_released_fish_tagging_data.rds")
 tagging_data = read_csv("data/tagging_data.csv")
 #release_wq = read_csv("data/release_water_quality_summary_2.csv")
-release_wq = readRDS("data/historical_release_water_quality_summary.rds")
 fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
 rectangles_all = read_csv("data/release_rectangles.csv")
 for_calfishtrack = read_csv("data/for_calfishtrack.csv")
 tag_life_2026 = readRDS("data/tag_life_survival_2026.rds")
 release_data = read_csv("data/release_data.csv")
 water_quality = readRDS("data/historical_water_quality.rds")
+
+# updated
 release_dates = readRDS("data/release_date_rectangles.rds")
+release_wq = readRDS("data/historical_release_water_quality_summary.rds")
 
 
 
