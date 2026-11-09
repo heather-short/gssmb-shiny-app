@@ -14,21 +14,21 @@ library(paletteer)
 
 # load data ------------------------------------------------------------------------------
 
-tagging = readRDS("data/historical_released_fish_tagging_data.rds")
-tagging_data = read_csv("data/tagging_data.csv")
-#release_wq = read_csv("data/release_water_quality_summary_2.csv")
-fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
-rectangles_all = read_csv("data/release_rectangles.csv")
-for_calfishtrack = read_csv("data/for_calfishtrack.csv")
-tag_life_2026 = readRDS("data/tag_life_survival_2026.rds")
-release_data = read_csv("data/release_data.csv")
-water_quality = readRDS("data/historical_water_quality.rds")
+# tagging page
+tagging = readRDS("data/historical_released_fish_tagging_data.rds") # for all tagging plots/tables
 
-# updated
-release_dates = readRDS("data/release_date_rectangles.rds")
-release_wq = readRDS("data/historical_release_water_quality_summary.rds")
+# release page
+release_dates = readRDS("data/release_date_rectangles.rds") # for water quality plot on release page
+water_quality = readRDS("data/historical_water_quality.rds") # for water quality plot on release page
+release_wq = readRDS("data/historical_release_water_quality_summary.rds") # for wq/release data table
 
+# tag life page
+tag_life_2026 = readRDS("data/tag_life_survival_2026.rds") # for tag life plot
 
+# report page
+tagging_data = readRDS("data/historical_tagging_data.rds") # for tagging report
+release_data = readRDS("data/historical_release_data.rds") # for release report
+for_calfishtrack = readRDS("data/calfishtrack_report.rds") # for calfishtrack report
 
 # begin user interface ------------------------------------------------------------------------------
 
@@ -156,11 +156,6 @@ ui <- page_navbar(
                             br(),
                             h5("Figure 2: Fish weight (g) as a function of fork length (mm) 
                                by tagging block. Each point represents an individual fish."))),
-                     
-                     # legend image      
-                     #column(1, 
-                           # br(), br(),
-                          #  tags$img(src = "legend2.png"), style = "text-align: left;")), # end row
             
             br(), 
             
@@ -247,8 +242,8 @@ ui <- page_navbar(
                             # selection box for water year
                             wellPanel(h4("Select a water year and release block to explore the release data."),
                                       selectInput("water_year", "Water Year:",
-                                                  choices  = sort(unique(fp_all$water_year)),
-                                                  selected = max(fp_all$water_year)),
+                                                  choices  = sort(unique(release_wq$water_year)),
+                                                  selected = "2026"),
                                       selectInput("block_id", "Release Block:", choices = NULL))),
 
                      # release picture and caption
@@ -279,7 +274,7 @@ ui <- page_navbar(
             # row for figure caption
             fluidRow(br(), 
                      h5("Figure 2: Water quality at Freeport, CA. Shaded rectangles represent 72-hour release periods for each block 
-                     of the study. Data source: CDEC and USGS."), 
+                     of the study. The highlighted rectangles represent the selected Block. Data source: CDEC and USGS."), 
                      br(), br())
             
   ), # end nav panel - releases
@@ -303,8 +298,8 @@ nav_panel(title = "Tag Life",
                           # selection box for water year
                           wellPanel(h4("Select a water year to explore the tag life data."),
                                     selectInput("water_year", " ",
-                                                choices  = sort(unique(fp_all$water_year)),
-                                                selected = max(fp_all$water_year)))),
+                                                choices  = sort(unique(release_wq$water_year)),
+                                                selected = "2026"))),
 
                    # tag vial picture and caption   
                    column(6,
@@ -350,7 +345,7 @@ nav_panel(title = "Download Data",
                                # selection box for water year
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(tagging_data$water_year)),
-                                           selected = max(tagging_data$water_year)),
+                                           selected = "2026"),
 
                                # buttons
                                actionButton("tagging_gen_report", "Generate Report", class = "btn-primary"),
@@ -363,7 +358,7 @@ nav_panel(title = "Download Data",
                                # selection box for water year
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(release_data$water_year)),
-                                           selected = max(release_data$water_year)),
+                                           selected = "2026"),
 
                                # buttons
                                actionButton("release_gen_report", "Generate Report", class = "btn-primary"),
@@ -376,10 +371,10 @@ nav_panel(title = "Download Data",
                                # selection box for water year and block
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(for_calfishtrack$water_year)),
-                                           selected = max(for_calfishtrack$water_year)),
+                                           selected = "2026"),
                                selectInput("block", "Tagging & Release Block:",
                                            choices  = sort(unique(for_calfishtrack$block)),
-                                           selected = min(for_calfishtrack$block)),
+                                           selected = "Block 1A"),
 
                                # buttons
                                actionButton("calfishtrack_gen_report", "Generate Report", class = "btn-primary"),
@@ -443,7 +438,7 @@ server <- function(input, output, session) {
       filter(water_year == input$wy) %>%
       # modify data types
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
       group_by(water_year, block, run) %>%
       summarize(n = n(),
                 Minimum = round(min(weight_gr, na.rm = TRUE), 2),
@@ -484,7 +479,7 @@ server <- function(input, output, session) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
         mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
         group_by(block) %>%
         summarize() %>% # collapse to one row per block
         ungroup()
@@ -499,7 +494,7 @@ server <- function(input, output, session) {
       # require water_year as an input
       filter(water_year == input$wy) %>%
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B")),
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5")),
              
              highlight = if (is.null(selected_block)) "all" # no selection, everything is tagged as all
              else ifelse(block == selected_block, "selected", "other")) # selection = selected, everything else = other
@@ -554,7 +549,7 @@ server <- function(input, output, session) {
       select(water_year, block, run, fork_length_mm) %>%
       filter(water_year == input$wy) %>%
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
       group_by(water_year, block, run) %>%
       summarize("n" = n(), 
                 "Minimum" = round(min(fork_length_mm, na.rm = T), 2),
@@ -595,7 +590,7 @@ server <- function(input, output, session) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
         mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>%
+                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
         group_by(block) %>%
         summarize() %>% # collapse to one row per block
         ungroup()
@@ -610,7 +605,7 @@ server <- function(input, output, session) {
       # require water_year as an input
       filter(water_year == input$wy) %>%
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B")),
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5")),
              
              highlight = if (is.null(selected_block)) "all" # no selection, everything is tagged as all
              else ifelse(block == selected_block, "selected", "other")) # selection = selected, everything else = other
@@ -665,7 +660,7 @@ server <- function(input, output, session) {
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>% 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
       group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_anes = round(min(anesthetic_time_sec, na.rm = TRUE)),
@@ -732,7 +727,7 @@ server <- function(input, output, session) {
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>% 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
       group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_surg = round(min(surgery_time_sec, na.rm = TRUE)),
@@ -799,7 +794,7 @@ server <- function(input, output, session) {
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
-                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B"))) %>% 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
       group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_rec = round(min(recovery_time_sec, na.rm = TRUE)),
@@ -976,74 +971,6 @@ server <- function(input, output, session) {
     
   }, height = 1000)
   
-  
-  # create y label lookup vector
-  y_labels <- c(discharge   = "Discharge (cfs)",
-                velocity    = "Velocity (ft/s)",
-                temperature = "Temperature (°C)",
-                turbidity   = "Turbidity (NTU)")
-  
-  fp_sub <- reactive({
-    
-    fp_all %>%
-
-      # filter by selected water year and value type
-      filter(water_year == input$water_year,
-             value_type == input$value_type) %>%
-      
-      # modify data type 
-      mutate(datetime = ymd_hms(datetime))
-    
-  })
-  
-  rectangles_sub <- reactive({
-    
-    rectangles_all %>%
-      
-      # filter rectangles by water year selection
-      filter(water_year == input$water_year) %>%
-      
-      # parse start and end dates
-      mutate(start = ymd(start),
-             end   = ymd(end))
-    
-  })
-  
-  output$wq_plot <- renderPlot({
-    
-    req(nrow(fp_sub()) > 0) # requires there to be data - no plot if no data
-    
-    p = ggplot(fp_sub(), aes(x = datetime, y = value)) +
-      geom_rect(data = rectangles_sub(), inherit.aes = FALSE,
-                aes(xmin = as.POSIXct(start),
-                    xmax = as.POSIXct(end),
-                    ymin = -Inf, ymax = Inf),
-                fill = "darkgray", alpha = 0.40) +
-      geom_line(color = "#2F4F4F", linewidth = 1.2) +
-      scale_x_datetime(name = "Month",
-                       date_breaks = "1 month",
-                       date_labels = "%b") +
-      labs(y = y_labels[input$value_type]) +
-      theme_minimal(base_size = 14) +
-      theme(axis.title = element_text(size = 16),
-            axis.text  = element_text(size = 12))
-    
-    # require release date selection
-    req(input$release_date)
-    
-    # modify data type 
-    target_dt = as.POSIXct(input$release_date)
-
-    # find the row in fp_sub() whose datetime is nearest to target_dt (since release_date may not exactly match a logged reading)
-    closest_idx <- which.min(abs(difftime(fp_sub()$datetime, target_dt))) 
-    point_data  <- fp_sub()[closest_idx, ] # pull that single closest row
-    
-    p + geom_point(data = point_data,
-                   aes(x = datetime, y = value),
-                   shape = 21, color = "black", fill = "#FFC125", size = 4)
-    
-  }, res = 96) # end render plot
-  
   # tag life plot ------------------------------------------------------------------------------
   
   output$plotOrMessage <- renderUI({
@@ -1085,13 +1012,6 @@ server <- function(input, output, session) {
     
     tagging_data %>% 
       filter(water_year == input$water_year) %>% 
-      
-      mutate(anesthetic_time_mmss = as.character(anesthetic_time_mmss),
-             surgery_time_mmss = as.character(surgery_time_mmss),
-             recovery_time_mmss = as.character(recovery_time_mmss)) %>% 
-      
-      mutate(anesthetic_time_mmss = str_sub(anesthetic_time_mmss, end = -4),
-             surgery_time_mmss = str_sub(surgery_time_mmss, end = -4)) %>% 
       
       select(water_year, block, tag_activation_date, species, run, date, surgeon, crew, vial_number, 
              tag_id_hex, weight_gr, fork_length_mm, anesthetic_time_mmss, surgery_time_mmss, recovery_time_mmss, comments)
