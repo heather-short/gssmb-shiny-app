@@ -1,6 +1,6 @@
-# GSSMB Shiny App - UI
+# GSSMB Shiny App
 # H. Short
-# Wed Jul  8 08:46:08 2026 ------------------------------
+# last update: 2026-11-09 15:04:31
 
 # load required packages ------------------------------------------------------------------------------
 
@@ -9,20 +9,26 @@ library(bslib)
 library(DT)  
 library(tidyverse)
 library(shinythemes)
-library(ggplot2)
 library(thematic)
-library(lubridate)
+library(paletteer)
 
 # load data ------------------------------------------------------------------------------
 
-tagging = read_csv("data/released_fish_tagging_data.csv")
-tagging_data = read_csv("data/tagging_data.csv")
-release_wq = read_csv("data/release_water_quality_summary_2.csv")
-fp_all = read_csv("data/cdec_all_fp_water_quality.csv")
-rectangles_all = read_csv("data/release_rectangles.csv")
-for_calfishtrack = read_csv("data/for_calfishtrack.csv")
-tag_life_2026 = read_csv("data/tag_life_2026.csv")
-release_data = read_csv("data/release_data.csv")
+# tagging page
+tagging = readRDS("data/historical_released_fish_tagging_data.rds") # for all tagging plots/tables
+
+# release page
+release_dates = readRDS("data/release_date_rectangles.rds") # for water quality plot on release page
+water_quality = readRDS("data/historical_water_quality.rds") # for water quality plot on release page
+release_wq = readRDS("data/historical_release_water_quality_summary.rds") # for wq/release data table
+
+# tag life page
+tag_life_2026 = readRDS("data/tag_life_survival_2026.rds") # for tag life plot
+
+# report page
+tagging_data = readRDS("data/historical_tagging_data.rds") # for tagging report
+release_data = readRDS("data/historical_release_data.rds") # for release report
+for_calfishtrack = readRDS("data/calfishtrack_report.rds") # for calfishtrack report
 
 # begin user interface ------------------------------------------------------------------------------
 
@@ -108,7 +114,7 @@ ui <- page_navbar(
                      column(6, 
                             br(),
                             h5("Methods: \n
-                                To begin each surgical procedure, fish were placed in an anesthesia solution 
+                                To begin each surgical procedure, juvenile Chinook salmon were placed in an anesthesia solution 
                                 until they lost equilibrium and were no longer responsive to touch. The fish 
                                 was removed from anesthesia and weighed to the nearest 0.1 g and fork length 
                                 was measured to the nearest mm. Fish were then placed ventral side up on a foam 
@@ -118,14 +124,14 @@ ui <- page_navbar(
                                 transmitter was inserted into the coelomic cavity before the incision was closed 
                                 with a single uninterrupted 2 x 2 x 2 surgical knot. The duration of each surgery 
                                 was measured from the time the fish was removed from anesthesia to the time it was 
-                                placed in recovery following surgery. Tagging methods were based on Liedke et al. (2012)."),
+                                placed in recovery following surgery. Tagging methods were based on Liedtke et al. (2012)."),
                             br(),
 
                             # selection box for water year 
                             wellPanel(h4("Select a water year to explore the tagging data."),
                                       selectInput("wy", " ",
                                                   choices = sort(unique(tagging$water_year)),
-                                                  selected = max(tagging$water_year)))), 
+                                                  selected = "2026"))), 
 
                      # tag picture and caption
                      column(6, 
@@ -144,17 +150,12 @@ ui <- page_navbar(
             fluidRow(h2("Morphometrics"),
                      
                      # weight vs length plot & caption
-                     column(11,   
+                     column(12,   
                             br(),
                             plotOutput("plot_wl"), 
                             br(),
                             h5("Figure 2: Fish weight (g) as a function of fork length (mm) 
-                               by month of tagging. Each point represents an individual fish.")),
-                     
-                     # legend image      
-                     column(1, 
-                            br(), br(),
-                            tags$img(src = "legend2.png"), style = "text-align: left;")), # end row
+                               by tagging block. Each point represents an individual fish."))),
             
             br(), 
             
@@ -168,7 +169,7 @@ ui <- page_navbar(
                      br(),
                      plotOutput("hist_weight"), 
                      br(),
-                     h5("Figure 3: Distribution of Chinook salmon weight (g) by month of tagging.")), 
+                     h5("Figure 3: Distribution of Chinook salmon weight (g) by tagging block.")), 
               
               # fork length table and histogram and caption
               column(6, 
@@ -178,7 +179,7 @@ ui <- page_navbar(
                      br(),
                      plotOutput("hist_fl"),
                      br(),
-                     h5("Figure 4: Distribution of Chinook salmon fork length (mm) by month of tagging."))), 
+                     h5("Figure 4: Distribution of Chinook salmon fork length (mm) by tagging block."))), 
             
             # add a line to separate from next row
             br(), 
@@ -230,18 +231,20 @@ ui <- page_navbar(
                          
                      column(6, 
                             br(),
-                            h5("Methods: Tagged fish were released over a two-week block, to cover a spring-neap tidal cycle, 
-                                and at regular intervals throughout the diel cycle. Small subgroups of ten tagged fish were 
-                                released every 3 hours on each study release date, resulting in eight subgroups daily 
+                            h5("Methods: Tagged juvenile Chinook salmon were released over a two-week block, to cover a spring-neap tidal cycle, 
+                                and at regular intervals throughout the diel cycle. Small sub-groups of ten tagged fish were 
+                                released in the main channel of the Sacramento River near the Sacramento Marina (38.560, -121.517) 
+                                every 3 hours on each study release date, resulting in eight subgroups daily 
                                 (midnight, 3 a.m., 6 a.m., 9 a.m., noon, 3 p.m., 6 p.m., and 9 p.m.). 
                                 Releases occurred over a 72-hour period during each week."),
                             br(),
 
                             # selection box for water year
-                            wellPanel(h4("Select a water year to explore the tagging data."),
-                                      selectInput("water_year", " ",
-                                                  choices  = sort(unique(fp_all$water_year)),
-                                                  selected = max(fp_all$water_year)))),
+                            wellPanel(h4("Select a water year and release block to explore the release data."),
+                                      selectInput("water_year", "Water Year:",
+                                                  choices  = sort(unique(release_wq$water_year)),
+                                                  selected = "2026"),
+                                      selectInput("block_id", "Release Block:", choices = NULL))),
 
                      # release picture and caption
                      column(6,
@@ -258,31 +261,23 @@ ui <- page_navbar(
             
             fluidRow(h2("Water Quality during Fish Releases"),
                      
-                     # selection box for release date and water quality metric       
-                     column(3, 
-                            br(), br(),
-                            wellPanel(h4("Make selections to explore the release & water quality data."),
-                                      selectInput("release_date", "Release Date:", choices = NULL),
-                                      selectInput("value_type", "Water Qualtiy Metric:",
-                                                  choices = c("Discharge (cfs)"      = "discharge",
-                                                              "Velocity (ft/s)"      = "velocity",
-                                                              "Temperature (°C)"     = "temperature",
-                                                              "Turbidity (NTU)"      = "turbidity")))),
-
                      # water quality table       
-                     column(9,   
+                     column(6,   
                             br(),
-                            DTOutput("release_wq_table"))),
-            
-            br(), 
+                            DTOutput("release_wq_table")),
+                
+                     # water quality table       
+                     column(6,   
+                            br(),
+                            plotOutput("water_quality_plot"))),
 
-            # water quality plot and caption
-            fluidRow(plotOutput("wq_plot"),
-                     h5("Figure 1: CDEC water quality (discharge, velocity, temperature, or turbidity) at Freeport, CA. 
-                      Shaded rectangles represent 72-hour release periods for each week of the study. 
-                       The yellow point represents the selected release date.")),
-  
-), # end nav panel - releases
+            # row for figure caption
+            fluidRow(br(), 
+                     h5("Figure 2: Water quality at Freeport, CA. Shaded rectangles represent 72-hour release periods for each block 
+                     of the study. The highlighted rectangles represent the selected Block. Data source: CDEC and USGS."), 
+                     br(), br())
+            
+  ), # end nav panel - releases
 
 # tag life page ------------------------------------------------------------------------------
 
@@ -303,8 +298,8 @@ nav_panel(title = "Tag Life",
                           # selection box for water year
                           wellPanel(h4("Select a water year to explore the tag life data."),
                                     selectInput("water_year", " ",
-                                                choices  = sort(unique(fp_all$water_year)),
-                                                selected = max(fp_all$water_year)))),
+                                                choices  = sort(unique(release_wq$water_year)),
+                                                selected = "2026"))),
 
                    # tag vial picture and caption   
                    column(6,
@@ -347,13 +342,10 @@ nav_panel(title = "Download Data",
 
                      wellPanel(h4("Tagging Report"),
 
-                               # selection box for water year and block
+                               # selection box for water year
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(tagging_data$water_year)),
-                                           selected = max(tagging_data$water_year)),
-                               selectInput("block", "Tagging Block:",
-                                           choices  = sort(unique(tagging_data$block)),
-                                           selected = min(tagging_data$block)),
+                                           selected = "2026"),
 
                                # buttons
                                actionButton("tagging_gen_report", "Generate Report", class = "btn-primary"),
@@ -363,13 +355,10 @@ nav_panel(title = "Download Data",
               column(4,
                      wellPanel(h4("Release Report"),
 
-                               # selection box for water year and block
+                               # selection box for water year
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(release_data$water_year)),
-                                           selected = max(release_data$water_year)),
-                               selectInput("block", "Release Block:",
-                                           choices  = sort(unique(release_data$block)),
-                                           selected = min(release_data$block)),
+                                           selected = "2026"),
 
                                # buttons
                                actionButton("release_gen_report", "Generate Report", class = "btn-primary"),
@@ -382,10 +371,10 @@ nav_panel(title = "Download Data",
                                # selection box for water year and block
                                selectInput("water_year", "Water Year:",
                                            choices  = sort(unique(for_calfishtrack$water_year)),
-                                           selected = max(for_calfishtrack$water_year)),
+                                           selected = "2026"),
                                selectInput("block", "Tagging & Release Block:",
                                            choices  = sort(unique(for_calfishtrack$block)),
-                                           selected = min(for_calfishtrack$block)),
+                                           selected = "Block 1A"),
 
                                # buttons
                                actionButton("calfishtrack_gen_report", "Generate Report", class = "btn-primary"),
@@ -417,18 +406,12 @@ server <- function(input, output, session) {
     tagging %>% 
       # filter by water year selection
       filter(water_year == input$wy) %>% 
-      # modify data types 
-      mutate(water_year = factor(water_year), 
-             date = ymd(date),
-             run = factor(run),
-             month = factor(month, levels = c("Dec", "Jan", "Feb", "Mar", "Apr", "May"))) %>%
       
       # plot
-      ggplot(aes(x = weight_gr, y = fork_length_mm, color = month)) + 
-      facet_grid(~month) + 
+      ggplot(aes(x = weight_gr, y = fork_length_mm, color = block)) + 
+      facet_grid(~block) + 
       geom_jitter() + 
-      scale_color_manual(values = c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
-                                    "Apr" = "#A2CD5A", "May" = "#FFC125")) + 
+      scale_color_paletteer_d("MoMAColors::Ernst") +
       labs(x = "Weight (g)",
            y = "Fork Length (mm)") +
       theme(axis.title.x = element_text(size = 16),
@@ -450,12 +433,13 @@ server <- function(input, output, session) {
     req(input$wy)
     
     df = tagging %>%
-      select(water_year, month, run, weight_gr) %>%
+      select(water_year, block, run, weight_gr) %>%
       # filter by water year selection
       filter(water_year == input$wy) %>%
       # modify data types
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-      group_by(water_year, month, run) %>%
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
+      group_by(water_year, block, run) %>%
       summarize(n = n(),
                 Minimum = round(min(weight_gr, na.rm = TRUE), 2),
                 Maximum = round(max(weight_gr, na.rm = TRUE), 2),
@@ -463,20 +447,21 @@ server <- function(input, output, session) {
                 SD = round(sd(weight_gr, na.rm = TRUE), 2)) %>%
       ungroup() %>%
       rename("Water Year" = water_year,
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run)
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-    
-  }) # end render data table
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # weight histogram ------------------------------------------------------------------------------
   
@@ -485,42 +470,40 @@ server <- function(input, output, session) {
     # require water_year as an input
     req(input$wy)
     
-    # get the selected month from the clicked row (NULL if none selected)
-    selected_month <- NULL # default, nothing selected
+    # get the selected block from the clicked row (NULL if none selected)
+    selected_block <- NULL # default, nothing selected
     row <- input$table_weight_rows_selected # clicked row on the table
 
     # if a row is selected
     if (length(row) > 0) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
-        mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-        group_by(month) %>%
-        summarize() %>% # collapse to one row per month
+        mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
+        group_by(block) %>%
+        summarize() %>% # collapse to one row per block
         ungroup()
       
-      # map the clicked row number to the actual month name
+      # map the clicked row number to the actual block name
       # if no row is selected, this code is skipped
-      selected_month <- as.character(df_lookup$month[row])} # end row selection
-    
-    # assigns month colors
-    month_colors <- c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
-                      "Apr" = "#A2CD5A", "May" = "#FFC125")
+      selected_block <- as.character(df_lookup$block[row])} # end row selection
     
     # make the histogram  
     plot_data <- tagging %>%
       
       # require water_year as an input
       filter(water_year == input$wy) %>%
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May")),
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5")),
              
-             highlight = if (is.null(selected_month)) "all" # no selection, everything is tagged as all
-             else ifelse(month == selected_month, "selected", "other")) # selection = selected, everything else = other
+             highlight = if (is.null(selected_block)) "all" # no selection, everything is tagged as all
+             else ifelse(block == selected_block, "selected", "other")) # selection = selected, everything else = other
     
-    if (is.null(selected_month)) {
-      # No row selected — normal plot, colored by month
-      ggplot(plot_data, aes(x = weight_gr, fill = month)) +
+    if (is.null(selected_block)) {
+      # No row selected — normal plot, colored by block
+      ggplot(plot_data, aes(x = weight_gr, fill = block)) +
         geom_histogram(alpha = 0.7, position = "identity") +
-        scale_fill_manual(values = month_colors) +
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
         labs(x = "Weight (g)", 
              y = "Count") +
         theme(axis.title.x = element_text(size = 16),
@@ -536,11 +519,11 @@ server <- function(input, output, session) {
     else {
       # row selected — highlight chosen month, grey out others
       ggplot(plot_data, aes(x = weight_gr,
-                            fill = month,
+                            fill = block,
                             alpha = highlight)) +
         geom_histogram(position = "identity") +
-        scale_fill_manual(values = month_colors) +
-        scale_alpha_manual(values = c(selected = 0.85, other = 0.15),
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
+        scale_alpha_manual(values = c(selected = 0.90, other = 0.10),
                            guide = "none") +
         labs(x = "Weight (g)", 
              y = "Count") +
@@ -563,10 +546,11 @@ server <- function(input, output, session) {
     req(input$wy)
     
     df = tagging %>%
-      select(water_year, month, run, fork_length_mm) %>%
+      select(water_year, block, run, fork_length_mm) %>%
       filter(water_year == input$wy) %>%
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-      group_by(water_year, month, run) %>%
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
+      group_by(water_year, block, run) %>%
       summarize("n" = n(), 
                 "Minimum" = round(min(fork_length_mm, na.rm = T), 2),
                 "Maximum" = round(max(fork_length_mm, na.rm = T), 2),
@@ -574,20 +558,21 @@ server <- function(input, output, session) {
                 "SD" = round(sd(fork_length_mm, na.rm = T), 2)) %>%
       ungroup() %>%
       rename("Water Year" = water_year,
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run)
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-    
-  }) # end render data table 
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table 
   
   # fork length histogram ------------------------------------------------------------------------------
   
@@ -596,42 +581,40 @@ server <- function(input, output, session) {
     # require water_year as an input
     req(input$wy)
     
-    # get the selected month from the clicked row (NULL if none selected)
-    selected_month <- NULL # default, nothing selected
+    # get the selected block from the clicked row (NULL if none selected)
+    selected_block <- NULL # default, nothing selected
     row <- input$table_fl_rows_selected # clicked row on the table
 
     # if a row is selected
     if (length(row) > 0) {
       df_lookup <- tagging %>%
         filter(water_year == input$wy) %>%
-        mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>%
-        group_by(month) %>%
-        summarize() %>% # collapse to one row per month
+        mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                                "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
+        group_by(block) %>%
+        summarize() %>% # collapse to one row per block
         ungroup()
       
-      # map the clicked row number to actual month name
+      # map the clicked row number to actual block name
       # if no row is selected, this code is skipped
-      selected_month <- as.character(df_lookup$month[row])} # end row selection
-    
-    # assigns month colors
-    month_colors <- c("Dec" = "#2F4F4F", "Jan" = "#53868B", "Feb" = "#6E8B3D",   
-                      "Apr" = "#A2CD5A", "May" = "#FFC125")
+      selected_block <- as.character(df_lookup$block[row])} # end row selection
     
     # make the histogram  
     df = tagging %>%
       
       # require water_year as an input
       filter(water_year == input$wy) %>%
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May")),
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5")),
              
-             highlight = if (is.null(selected_month)) "all" # no selection, everything is tagged as all
-             else ifelse(month == selected_month, "selected", "other")) # selection = selected, everything else = other
+             highlight = if (is.null(selected_block)) "all" # no selection, everything is tagged as all
+             else ifelse(block == selected_block, "selected", "other")) # selection = selected, everything else = other
     
-    if (is.null(selected_month)) {
-      # no row selected — normal plot, colored by month
-      ggplot(df, aes(x = fork_length_mm, fill = month)) +
+    if (is.null(selected_block)) {
+      # no row selected — normal plot, colored by block
+      ggplot(df, aes(x = fork_length_mm, fill = block)) +
         geom_histogram(alpha = 0.7, position = "identity") +
-        scale_fill_manual(values = month_colors) +
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
         scale_y_continuous(position = "right") +
         labs(x = "Fork Length (mm)", 
              y = "Count") +
@@ -644,14 +627,14 @@ server <- function(input, output, session) {
         )} # end if statement
     
     else {
-      # row selected — highlight chosen month, grey out others
+      # row selected — highlight chosen block, grey out others
       ggplot(df, aes(x = fork_length_mm,
-                            fill = month,
+                            fill = block,
                             alpha = highlight)) +
         geom_histogram(position = "identity") +
-        scale_fill_manual(values = month_colors) +
+        scale_fill_paletteer_d("MoMAColors::Ernst") +
         scale_y_continuous(position = "right") +
-        scale_alpha_manual(values = c(selected = 0.85, other = 0.15),
+        scale_alpha_manual(values = c(selected = 0.90, other = 0.10),
                            guide = "none") +
         labs(x = "Fork Length (mm)", 
              y = "Count") +
@@ -676,8 +659,9 @@ server <- function(input, output, session) {
     
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>% 
-      group_by(water_year, month, run) %>% 
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
+      group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_anes = round(min(anesthetic_time_sec, na.rm = TRUE)),
                 max_anes = round(max(anesthetic_time_sec, na.rm = TRUE)),
@@ -689,7 +673,7 @@ server <- function(input, output, session) {
              sd_anes = sprintf("%02d:%02d", sd_anes %/% 60, sd_anes %% 60)) %>% 
       ungroup() %>% 
       rename("Water Year" = water_year, 
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run, 
              "Min" = min_anes, 
              "Max" = max_anes, 
@@ -698,14 +682,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-  }) # end render data table
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # boxplot
   output$anesthetic_boxplot <- renderPlot({req(input$wy)
@@ -721,7 +707,7 @@ server <- function(input, output, session) {
                          labels = function(x) sprintf("%02d:%02d", x %/% 60, round(x %% 60))) +
       scale_x_discrete(labels = c("late-fall" = "Late Fall", "fall" = "Fall"), limits = c("late-fall", "fall")) +
       stat_summary(fun = mean, geom = "point", shape = 16, size = 3, color = "white") +
-      scale_fill_manual(values = c("late-fall" = "#53868B", "fall" = "#6E8B3D"))+
+      scale_fill_manual(values = c("late-fall" = "#8CBF9AFF", "fall" = "#315B88FF"))+
       theme(axis.title.x = element_text(size = 18),
             axis.text.x = element_text(size = 16),
             axis.title.y = element_text(size = 18),
@@ -740,8 +726,9 @@ server <- function(input, output, session) {
     
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>% 
-      group_by(water_year, month, run) %>% 
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
+      group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_surg = round(min(surgery_time_sec, na.rm = TRUE)),
                 max_surg = round(max(surgery_time_sec, na.rm = TRUE)),
@@ -753,7 +740,7 @@ server <- function(input, output, session) {
              sd_surg = sprintf("%02d:%02d", sd_surg %/% 60, sd_surg %% 60)) %>% 
       ungroup() %>% 
       rename("Water Year" = water_year, 
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run, 
              "Min" = min_surg, 
              "Max" = max_surg, 
@@ -762,14 +749,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-  }) # end render data table
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # boxplot
   output$surgery_boxplot <- renderPlot({req(input$wy)
@@ -785,7 +774,7 @@ server <- function(input, output, session) {
                          labels = function(x) sprintf("%02d:%02d", x %/% 60, round(x %% 60))) +
       scale_x_discrete(labels = c("late-fall" = "Late Fall", "fall" = "Fall"), limits = c("late-fall", "fall")) +
       stat_summary(fun = mean, geom = "point", shape = 16, size = 3, color = "white") +
-      scale_fill_manual(values = c("late-fall" = "#53868B", "fall" = "#6E8B3D"))+
+      scale_fill_manual(values = c("late-fall" = "#8CBF9AFF", "fall" = "#315B88FF"))+
       theme(axis.title.x = element_text(size = 18),
             axis.text.x = element_text(size = 16),
             axis.title.y = element_text(size = 18),
@@ -804,8 +793,9 @@ server <- function(input, output, session) {
     
     df <- tagging %>% 
       filter(water_year == input$wy) %>% 
-      mutate(month = factor(month, levels = c("Dec","Jan","Feb","Mar","Apr","May"))) %>% 
-      group_by(water_year, month, run) %>% 
+      mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
+                                              "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
+      group_by(water_year, block, run) %>% 
       summarize(n = n(),
                 min_rec = round(min(recovery_time_sec, na.rm = TRUE)),
                 max_rec = round(max(recovery_time_sec, na.rm = TRUE)),
@@ -817,7 +807,7 @@ server <- function(input, output, session) {
              sd_rec = sprintf("%02d:%02d", sd_rec %/% 60, sd_rec %% 60)) %>% 
       ungroup() %>% 
       rename("Water Year" = water_year, 
-             "Month" = month,
+             "Block" = block,
              "Run Type" = run, 
              "Min" = min_rec, 
              "Max" = max_rec, 
@@ -826,14 +816,16 @@ server <- function(input, output, session) {
     
     # creates data table with selectable row
     datatable(df,
-              rownames = FALSE,
-              selection = list(mode = "single"),   
-              options = list(dom = "t",
-                             server = FALSE, 
-                             columnDefs = list(list(targets = 0, 
-                                                    visible = FALSE, 
-                                                    width = "0px"))))
-  }) # end render data table 
+              rownames  = FALSE,
+              selection = list(mode = "single"),
+              options   = list(
+                dom = "t",
+                columnDefs = list(
+                  list(targets = 0, visible = FALSE),
+                  list(targets = "_all", className = "dt-center")
+                )
+              ))
+  }, server = FALSE) # end render data table 
   
   # boxplot
   output$recovery_boxplot <- renderPlot({req(input$wy)
@@ -849,7 +841,7 @@ server <- function(input, output, session) {
                          labels = function(x) sprintf("%02d:%02d", x %/% 60, round(x %% 60))) +
       scale_x_discrete(labels = c("late-fall" = "Late Fall", "fall" = "Fall"), limits = c("late-fall", "fall")) +
       stat_summary(fun = mean, geom = "point", shape = 16, size = 3, color = "white") +
-      scale_fill_manual(values = c("late-fall" = "#53868B", "fall" = "#6E8B3D"))+
+      scale_fill_manual(values = c("late-fall" = "#8CBF9AFF", "fall" = "#315B88FF"))+
       theme(axis.title.x = element_text(size = 18),
             axis.text.x = element_text(size = 16),
             axis.title.y = element_text(size = 18),
@@ -860,136 +852,124 @@ server <- function(input, output, session) {
   
   # release water quality data table ------------------------------------------------------------------------------
   
-  # update release_date choices when water_year changes
+  # update block_id choices when water_year changes
   observe({
     
     # require water year as an input
     req(input$water_year)
     
-    dates <- release_wq %>%
+    blocks <- release_wq %>%
       # filter by water year selection
       filter(water_year == input$water_year) %>%
-      # pull all of the release dates as a vector
-      pull(release_date) %>%
-      # choose only the unique release dates
+      # pull all of the blocks as a vector
+      pull(block) %>%
+      # choose only the unique blocks
       unique() %>%
-      # sort in chronological rder
+      # sort in chronological order
       sort()
     
-    updateSelectInput(session, "release_date",
-                      choices  = dates,
-                      selected = dates[1])
-  })
-  
-  # create date selection input using "dates"
-  output$release_date_ui <- renderUI({
-    
-    selectInput("release_date", "Release Date:", choices = NULL)
-    
+    updateSelectInput(session, "block_id",
+                      choices  = blocks,
+                      selected = blocks[1])
   })
   
   # filtered table data
   filtered_release_wq <- reactive({
     
     # require both water year and release date as an input
-    req(input$water_year, input$release_date)
+    req(input$water_year, input$block_id)
     
     release_wq %>%
       filter(water_year == input$water_year,
-             release_date == input$release_date) %>%
-      mutate(rel_id = factor(rel_id, levels = c("RT-1", "RT-2", "RT-3", "RT-4", "RT-5", "RT-6", 
-                                                "RT-7", "RT-8", "RT-9", "RT-10", "RT-11", "RT-12",
-                                                "RT-13", "RT-14", "RT-15", "RT-16", "RT-17", "RT-18", 
-                                                "RT-19", "RT-20", "RT-21", "RT-22", "RT-23", "RT-24", "point_rel"))) %>% 
+             block == input$block_id) %>%
+      ungroup() %>% 
+      mutate(rel_id = factor(rel_id, levels = c(paste0("RT-", 1:24), "point_rel"))) %>% 
       arrange(rel_id) %>%
-      select(rel_id, release_time, lunar_phase, fish_released, temperature, turbidity, discharge, velocity) %>% 
+      select(rel_id, release_date, release_time, lunar_phase, fish_released, Temperature, Turbidity, Discharge) %>% 
       rename("Release ID"       = rel_id,
+             "Date of Release" = release_date,
              "Time of Release" = release_time, 
              "Lunar Phase" = lunar_phase,
              "Fish Released" = fish_released,
-             "Temperature (°C)" = temperature,
-             "Turbidity (FNU)"  = turbidity,
-             "Discharge (cfs)"  = discharge,
-             "Velocity (ft/s)"  = velocity)
+             "Temperature (°C)" = Temperature,
+             "Turbidity (FNU)"  = Turbidity,
+             "Discharge (cfs)"  = Discharge)
   })
   
   # Render DT
   output$release_wq_table <- renderDT({
     datatable(filtered_release_wq(),
-              rownames  = FALSE,
-              options = list(dom = "t",
-                             server = FALSE))
-    
-  }) # end render data table
+              rownames = FALSE,
+              options  = list(
+                dom = "t",
+                paging     = FALSE,  
+                columnDefs = list(
+                  list(className = "dt-center", targets = "_all")
+                )
+              ))
+  }, server = FALSE) # end render data table
   
   # release water quality plot ------------------------------------------------------------------------------
   
-  # create y label lookup vector
-  y_labels <- c(discharge   = "Discharge (cfs)",
-                velocity    = "Velocity (ft/s)",
-                temperature = "Temperature (°C)",
-                turbidity   = "Turbidity (NTU)")
-  
-  fp_sub <- reactive({
-    
-    fp_all %>%
+  freeport = reactive({
 
-      # filter by selected water year and value type
-      filter(water_year == input$water_year,
-             value_type == input$value_type) %>%
-      
-      # modify data type 
-      mutate(datetime = ymd_hms(datetime))
-    
-  })
+    water_quality %>% 
+    filter(water_year == input$water_year) %>% 
+    filter(location == "Sacramento River at Freeport")})
   
-  rectangles_sub <- reactive({
-    
-    rectangles_all %>%
-      
-      # filter rectangles by water year selection
-      filter(water_year == input$water_year) %>%
-      
-      # parse start and end dates
-      mutate(start = ymd(start),
-             end   = ymd(end))
-    
-  })
+    facet_titles = c("Temperature"       = "Temperature (°C)",
+                     "Turbidity"         = "Turbidity (FNU)",
+                     "Discharge"         = "Discharge (cfs)",
+                     "Discharge, tidally filtered" = "Tidally Filtered Discharge (cfs)")
   
-  output$wq_plot <- renderPlot({
+    facet_colors = c("Temperature"       = "#5FA2A4FF",
+                     "Turbidity"         = "#8CBF9AFF",
+                     "Discharge"         = "#191F40FF",
+                     "Discharge, tidally filtered" = "#315B88FF")
     
-    req(nrow(fp_sub()) > 0) # requires there to be data - no plot if no data
+    release_date_rects = reactive({
+      
+      release_dates %>%
+        # filter rectangles by water year selection
+        filter(water_year == input$water_year) %>%
+        # parse start and end dates
+        mutate(start = ymd_hm(paste(start, "21:00"), tz = "America/Los_Angeles"),
+               end   = start + hours(69),
+               # flag the rectangle that matches the selected block
+               selected = block %in% input$block_id)
+      
+    })
+      
+  
+  output$water_quality_plot <- renderPlot({
+
+     rects <- release_date_rects()
     
-    p = ggplot(fp_sub(), aes(x = datetime, y = value)) +
-      geom_rect(data = rectangles_sub(), inherit.aes = FALSE,
-                aes(xmin = as.POSIXct(start),
-                    xmax = as.POSIXct(end),
-                    ymin = -Inf, ymax = Inf),
-                fill = "darkgray", alpha = 0.40) +
-      geom_line(color = "#2F4F4F", linewidth = 1.2) +
+    ggplot(freeport(), aes(x = datetime, y = value, color = value_type)) + 
+      facet_wrap(vars(value_type), ncol = 1, scales = "free_y",
+                 labeller = as_labeller(facet_titles)) +
+      geom_rect(data = filter(rects, !selected), inherit.aes = FALSE,
+              aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+              fill = "darkgray", alpha = 0.30) +
+      # selected rectangle (highlighted)
+      geom_rect(data = filter(rects, selected), inherit.aes = FALSE,
+                aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+                fill = "#dde83dff", alpha = 0.55,
+                color = "#8f962bff", linewidth = 0.8) +
+       geom_line(linewidth = 1.2) + 
+      scale_color_manual(values = facet_colors) +
       scale_x_datetime(name = "Month",
                        date_breaks = "1 month",
                        date_labels = "%b") +
-      labs(y = y_labels[input$value_type]) +
-      theme_minimal(base_size = 14) +
-      theme(axis.title = element_text(size = 16),
-            axis.text  = element_text(size = 12))
+      theme(axis.title.x = element_text(size = 18),
+            axis.text.x = element_text(size = 16),
+            axis.title.y = element_text(size = 18),
+            axis.text.y = element_text(size = 16),
+            strip.text = element_text(size = 16, hjust = 0, face = "bold"),
+            legend.position = "none",
+            panel.spacing = unit(1, "lines"))
     
-    # require release date selection
-    req(input$release_date)
-    
-    # modify data type 
-    target_dt = as.POSIXct(input$release_date)
-
-    # find the row in fp_sub() whose datetime is nearest to target_dt (since release_date may not exactly match a logged reading)
-    closest_idx <- which.min(abs(difftime(fp_sub()$datetime, target_dt))) 
-    point_data  <- fp_sub()[closest_idx, ] # pull that single closest row
-    
-    p + geom_point(data = point_data,
-                   aes(x = datetime, y = value),
-                   shape = 21, color = "black", fill = "#FFC125", size = 4)
-    
-  }, res = 96) # end render plot
+  }, height = 1000)
   
   # tag life plot ------------------------------------------------------------------------------
   
@@ -1028,18 +1008,10 @@ server <- function(input, output, session) {
   tagging_report <- reactive({
     
     # require water year and block selection
-    req(input$water_year, input$block)
+    req(input$water_year)
     
     tagging_data %>% 
-      filter(water_year == input$water_year,
-             block == input$block) %>% 
-      
-      mutate(anesthetic_time_mmss = as.character(anesthetic_time_mmss),
-             surgery_time_mmss = as.character(surgery_time_mmss),
-             recovery_time_mmss = as.character(recovery_time_mmss)) %>% 
-      
-      mutate(anesthetic_time_mmss = str_sub(anesthetic_time_mmss, end = -4),
-             surgery_time_mmss = str_sub(surgery_time_mmss, end = -4)) %>% 
+      filter(water_year == input$water_year) %>% 
       
       select(water_year, block, tag_activation_date, species, run, date, surgeon, crew, vial_number, 
              tag_id_hex, weight_gr, fork_length_mm, anesthetic_time_mmss, surgery_time_mmss, recovery_time_mmss, comments)
@@ -1048,11 +1020,10 @@ server <- function(input, output, session) {
   release_report <- reactive({
     
     # require water year and block selection
-    req(input$water_year, input$block)
+    req(input$water_year)
     
     release_data %>%
-      filter(water_year == input$water_year,
-             block == input$block) %>% 
+      filter(water_year == input$water_year) %>% 
       
       mutate(release_datetime = parse_date_time(release_datetime, 
                                                 orders = c("ymd HMS", "ymd HM", "ymd")),
