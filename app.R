@@ -14,8 +14,11 @@ library(paletteer)
 
 # load data ------------------------------------------------------------------------------
 
+tag = readRDS("data/tagging_data_updated_11.13.2026.rds")
+rel = readRDS("data/release_data_updated_11.13.2026.rds")
+
 # tagging page
-tagging = readRDS("data/historical_released_fish_tagging_data.rds") # for all tagging plots/tables
+# tagging = readRDS("data/historical_released_fish_tagging_data.rds") # for all tagging plots/tables
 
 # release page
 release_dates = readRDS("data/release_date_rectangles.rds") # for water quality plot on release page
@@ -26,9 +29,9 @@ release_wq = readRDS("data/historical_release_water_quality_summary.rds") # for 
 tag_life_2026 = readRDS("data/tag_life_survival_2026.rds") # for tag life plot
 
 # report page
-tagging_data = readRDS("data/historical_tagging_data.rds") # for tagging report
+# tagging_data = readRDS("data/historical_tagging_data.rds") # for tagging report
 release_data = readRDS("data/historical_release_data.rds") # for release report
-for_calfishtrack = readRDS("data/calfishtrack_report.rds") # for calfishtrack report
+# for_calfishtrack = readRDS("data/calfishtrack_report.rds") # for calfishtrack report
 
 # begin user interface ------------------------------------------------------------------------------
 
@@ -130,7 +133,7 @@ ui <- page_navbar(
                             # selection box for water year 
                             wellPanel(h4("Select a water year to explore the tagging data."),
                                       selectInput("wy", " ",
-                                                  choices = sort(unique(tagging$water_year)),
+                                                  choices = sort(unique(tag$water_year)),
                                                   selected = "2026"))), 
 
                      # tag picture and caption
@@ -344,7 +347,7 @@ nav_panel(title = "Download Data",
 
                                # selection box for water year
                                selectInput("water_year", "Water Year:",
-                                           choices  = sort(unique(tagging_data$water_year)),
+                                           choices  = sort(unique(tag$water_year)),
                                            selected = "2026"),
 
                                # buttons
@@ -370,10 +373,10 @@ nav_panel(title = "Download Data",
 
                                # selection box for water year and block
                                selectInput("water_year", "Water Year:",
-                                           choices  = sort(unique(for_calfishtrack$water_year)),
+                                           choices  = sort(unique(tag$water_year)),
                                            selected = "2026"),
                                selectInput("block", "Tagging & Release Block:",
-                                           choices  = sort(unique(for_calfishtrack$block)),
+                                           choices  = sort(unique(tag$block)),
                                            selected = "Block 1A"),
 
                                # buttons
@@ -403,7 +406,11 @@ server <- function(input, output, session) {
     # require water_year as an input
     req(input$wy)
     
-    tagging %>% 
+    tag %>% 
+
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>% 
+      
       # filter by water year selection
       filter(water_year == input$wy) %>% 
       
@@ -432,7 +439,10 @@ server <- function(input, output, session) {
     # require water_year as an input  
     req(input$wy)
     
-    df = tagging %>%
+    df = tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
+      # select columns
       select(water_year, block, run, weight_gr) %>%
       # filter by water year selection
       filter(water_year == input$wy) %>%
@@ -476,7 +486,9 @@ server <- function(input, output, session) {
 
     # if a row is selected
     if (length(row) > 0) {
-      df_lookup <- tagging %>%
+      df_lookup <- tag %>% 
+        # filter to remove tagger effects fish
+        filter(!grepl("D", vial_number)) %>%
         filter(water_year == input$wy) %>%
         mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
                                                 "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
@@ -489,8 +501,10 @@ server <- function(input, output, session) {
       selected_block <- as.character(df_lookup$block[row])} # end row selection
     
     # make the histogram  
-    plot_data <- tagging %>%
-      
+    plot_data <- tag %>% 
+
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>% 
       # require water_year as an input
       filter(water_year == input$wy) %>%
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
@@ -545,7 +559,9 @@ server <- function(input, output, session) {
     # require water_year as an input  
     req(input$wy)
     
-    df = tagging %>%
+    df = tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
       select(water_year, block, run, fork_length_mm) %>%
       filter(water_year == input$wy) %>%
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
@@ -587,7 +603,9 @@ server <- function(input, output, session) {
 
     # if a row is selected
     if (length(row) > 0) {
-      df_lookup <- tagging %>%
+      df_lookup <- tag %>% 
+        # filter to remove tagger effects fish
+        filter(!grepl("D", vial_number)) %>%
         filter(water_year == input$wy) %>%
         mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
                                                 "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>%
@@ -600,8 +618,9 @@ server <- function(input, output, session) {
       selected_block <- as.character(df_lookup$block[row])} # end row selection
     
     # make the histogram  
-    df = tagging %>%
-      
+    df = tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
       # require water_year as an input
       filter(water_year == input$wy) %>%
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
@@ -657,7 +676,9 @@ server <- function(input, output, session) {
     # require water_year as an input  
     req(input$wy)
     
-    df <- tagging %>% 
+    df <- tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>% 
       filter(water_year == input$wy) %>% 
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
                                               "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
@@ -696,7 +717,9 @@ server <- function(input, output, session) {
   # boxplot
   output$anesthetic_boxplot <- renderPlot({req(input$wy)
     
-    tagging %>%
+    tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
       filter(water_year == input$wy) %>%
       ggplot(aes(x = run, y = anesthetic_time_sec, fill = run))+
       geom_boxplot()+
@@ -724,7 +747,9 @@ server <- function(input, output, session) {
     # require water_year as an input  
     req(input$wy)
     
-    df <- tagging %>% 
+    df <- tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
       filter(water_year == input$wy) %>% 
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
                                               "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
@@ -763,7 +788,9 @@ server <- function(input, output, session) {
   # boxplot
   output$surgery_boxplot <- renderPlot({req(input$wy)
     
-    tagging %>%
+    tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
       filter(water_year == input$wy) %>%
       ggplot(aes(x = run, y = surgery_time_sec, fill = run))+
       geom_boxplot() +
@@ -791,7 +818,9 @@ server <- function(input, output, session) {
     # require water_year as an input  
     req(input$wy)
     
-    df <- tagging %>% 
+    df <- tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
       filter(water_year == input$wy) %>% 
       mutate(block = factor(block, levels = c("Block 1A", "Block 1B", "Block 2A", "Block 2B", 
                                               "Block 3A", "Block 3B", "Block 4A", "Block 4B", "Block 5"))) %>% 
@@ -830,7 +859,9 @@ server <- function(input, output, session) {
   # boxplot
   output$recovery_boxplot <- renderPlot({req(input$wy)
     
-    tagging %>%
+    tag %>% 
+      # filter to remove tagger effects fish
+      filter(!grepl("D", vial_number)) %>%
       filter(water_year == input$wy) %>%
       ggplot(aes(x = run, y = recovery_time_sec, fill = run))+
       geom_boxplot()+
@@ -1010,7 +1041,7 @@ server <- function(input, output, session) {
     # require water year and block selection
     req(input$water_year)
     
-    tagging_data %>% 
+    tag %>% 
       filter(water_year == input$water_year) %>% 
       
       select(water_year, block, tag_activation_date, species, run, date, surgeon, crew, vial_number, 
@@ -1037,14 +1068,20 @@ server <- function(input, output, session) {
     
     # require tagging year and block selection
     req(input$water_year, input$block)
-    
-    for_calfishtrack %>% 
+
+    # merge tag and rel dfs to get datetime column
+      tag_and_rel = merge(tag, rel[, c("release_id", "water_year", "release_datetime")],
+      by = c("release_id", "water_year"),
+      all.x = TRUE) %>% 
+      filter(!grepl("D", vial_number)) %>% 
+      arrange(release_datetime, as.integer(vial_number)) %>% 
+        # select columns to keep
+      select(water_year, month, block, release_datetime, tag_id_hex, weight_gr, fork_length_mm)
+
+   for_calfishtrack_report = tag_and_rel %>% 
+
       filter(water_year == input$water_year,
              block == input$block) %>% 
-      
-      mutate(release_datetime = parse_date_time(release_datetime, 
-                                                orders = c("ymd HMS", "ymd HM", "ymd")),
-             release_datetime = format(release_datetime, "%Y-%m-%d %H:%M:%S")) %>% 
       
       rename(Release_Datetime_PST = release_datetime,
              TagID_Hex = tag_id_hex,
@@ -1062,6 +1099,7 @@ server <- function(input, output, session) {
       
       select(Row, StudyID, Release_Datetime_PST, TagID_Hex, Weight_gr, Length_mm, Release_riverkm,
              Release_location, PRI_nominal, tag_battery_life_days, Release_Latitude, Release_Longitude)
+    
   })
   
   # ---- Set active report when a "Generate" button is clicked ----
